@@ -8,7 +8,7 @@ export const register = async (req, res) => {
     let user = await User.findOne({ email });
     if (user) return res.status(400).json({ message: "User already exists" });
 
-    user = new User({ name, email,role, password, status: "unverified" });
+    user = new User({ name, email, role, password, status: "unverified" });
 
     const otp = await user.generateOTP();
 
@@ -53,7 +53,12 @@ export const verifyUser = async (req, res) => {
     await user.save();
 
     const token = user.generateToken();
-    res.cookie("token", token, { httpOnly: true, maxAge: 60 * 60 * 1000 });
+    res.cookie("token", token, {
+      httpOnly: true,
+      maxAge: 60 * 60 * 1000,
+      secure: true,
+      sameSite: "None",
+    });
 
     res.status(200).json({ message: "User verified successfully" });
   } catch (error) {
@@ -215,7 +220,12 @@ export const login = async (req, res) => {
       return res.status(400).json({ message: "Invalid email or password" });
 
     const token = user.generateToken();
-    res.cookie("token", token, { httpOnly: true, maxAge: 60 * 60 * 1000 });
+    res.cookie("token", token, {
+      httpOnly: true,
+      maxAge: 60 * 60 * 1000,
+      secure: true,
+      sameSite: "None",
+    });
 
     res.status(200).json({ message: "Login successful", user });
   } catch (error) {
@@ -331,7 +341,7 @@ export const updateProfile = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
-    const {role} = req.body;
+    const { role } = req.body;
     user.role = role;
     await user.save();
 
