@@ -7,32 +7,54 @@ const serviceSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
-    transporter:{
-      type:mongoose.Schema.Types.ObjectId,
-      ref:"User",
-      required:true
+    transporter: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
     },
     serviceCategory: {
       type: String,
       required: true,
+      enum: ["Bus", "Shared Ride", "Rental", "Cargo"],
       trim: true,
     },
-    price:{
-      type:Number,
-      required:true
+    destinationFrom: {
+      type: String,
+      required: true,
+      trim: true,
     },
-    passengers:{
-      type:Number,
-      required:true
+    destinationTo: {
+      type: String,
+      required: true,
+      trim: true,
     },
-    doors:{
-      type:Number,
-      required:true
+    travelDate: {
+      type: Date,
+      required: true,
     },
-    servicePic:{
-      type:String,
-      required:true
-    }
+    departureTime: {
+      type: String,
+      required: true,
+    },
+    totalSeats: {
+      type: Number,
+      required: true,
+      min: 1,
+    },
+    availableSeats: {
+      type: Number,
+      required: true,
+      min: 0,
+    },
+    pricePerSeat: {
+      type: Number,
+      required: true,
+      min: 0,
+    },
+    servicePic: {
+      type: String,
+      required: true,
+    },
   },
   { timestamps: true }
 );

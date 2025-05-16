@@ -12,34 +12,32 @@ const orderSchema = new mongoose.Schema(
       ref: "Service",
       required: true,
     },
-    pickupLocation: {
-      type: String,
-      required: true,
-      trim: true,
-    },
-    dropoffLocation: {
-      type: String,
-      required: true,
-      trim: true,
-    },
-    distance: {
-      type: Number,
-    },
-    price: {
+    seatsBooked: {
       type: Number,
       required: true,
+      min: 1,
     },
-    pickupTime: {
-      type: Date,
-      required: true,
+    luggageQuantity: {
+      type: Number,
+      default: 0,
+      min: 0,
     },
-    pickupDate: {
-      type: Date,
+    totalPrice: {
+      type: Number,
       required: true,
+      min: 0,
     },
     orderStatus: {
       type: String,
+      enum: ["Pending", "Confirmed", "Cancelled", "Completed"],
       default: "Pending",
+    },
+    isPaid: {
+      type: Boolean,
+      default: false,
+    },
+    invoiceUrl: {
+      type: String, // Optional - useful if integrating with payment systems like Stripe
     },
     deletedBy: {
       type: String,

@@ -8,41 +8,46 @@ export const createOrder = async (req, res) => {
   try {
     const { serviceId } = req.params;
     const customerId = req.user?.id;
-
     if (!customerId) {
-      return res.status(404).json({ message: "User not found!" });
+      return res.status(401).json({ message: "User not authenticated" });
     }
-
     const service = await Service.findById(serviceId);
     if (!service) {
-      return res.status(404).json({ message: "Service not available" });
+      return res.status(404).json({ message: "Service not found" });
     }
 
-    const { data } = req.body;
-    const { from, to, distance, date, time } = data;
-    const { price } = req.body;
+    const { seatsBooked, luggageQuantity, totalPrice } = req.body;
 
-    const pickupDateTime = new Date(`${date}T${time}:00Z`);
-    const pickupDateOnly = new Date(date);
+    if (!seatsBooked || seatsBooked < 1) {
+      return res
+        .status(400)
+        .json({ message: "Seats booked must be at least 1" });
+    }
+
+    if (service.availableSeats < seatsBooked) {
+      return res.status(400).json({ message: "Not enough available seats" });
+    }
+
 
     const newOrder = new Order({
       customerId,
       serviceId,
-      pickupLocation: from,
-      dropoffLocation: to,
-      distance: distance || 0,
-      price,
-      pickupTime: pickupDateTime,
-      pickupDate: pickupDateOnly,
+      seatsBooked,
+      luggageQuantity,
+      totalPrice,
     });
 
     await newOrder.save();
+
+    service.availableSeats -= seatsBooked;
+    await service.save();
 
     const populatedOrder = await Order.findById(newOrder._id).populate(
       "serviceId",
       "serviceName serviceCategory"
     );
 
+    // Send emails
     const adminEmail = process.env.ADMIN_EMAIL;
     const customerName = req.user?.name;
     const customerEmail = req.user?.email;
@@ -63,7 +68,6 @@ export const createOrder = async (req, res) => {
     return res.status(500).json({
       message: "Internal Server Error",
       error: error.message,
-      stack: error.stack,
     });
   }
 };
@@ -72,7 +76,7 @@ export const getAllOrders = async (req, res) => {
   try {
     const orders = await Order.find()
       .populate("customerId", "name email")
-      .populate("serviceId", "serviceName serviceCategory servicePic");
+      .populate("serviceId", "serviceName servicePic destinationFrom destinationTo travelDate departureTime pricePerSeat ");
 
     if (!orders || orders.length === 0) {
       return res.status(404).json({ message: "No orders found!" });

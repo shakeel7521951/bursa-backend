@@ -2,38 +2,56 @@ import Service from "../models/Service.js";
 
 export const createService = async (req, res) => {
   try {
-    const { serviceName, serviceCategory, price, passengers, doors } = req.body;
+    const {
+      serviceName,
+      serviceCategory,
+      destinationFrom,
+      destinationTo,
+      totalSeats,
+      availableSeats,
+      pricePerSeat,
+      departureTime,
+      travelDate,
+    } = req.body;
 
     const transporterId = req.user?.id;
     if (!transporterId) {
-      return res.status(404).json({ message: "User not found!" });
+      return res.status(401).json({ message: "Unauthorized user." });
     }
 
     if (!req.file) {
       return res.status(400).json({ message: "Image upload is required!" });
     }
 
-    const imageUrl = req.file.path;
+    const imageUrl = req.file.path; // or transform to full URL if needed
 
+    // Cast numeric fields if they come as strings
     const newService = new Service({
       serviceName,
       transporter: transporterId,
       serviceCategory,
-      price,
-      passengers,
-      doors,
+      destinationFrom,
+      destinationTo,
+      totalSeats: Number(totalSeats),
+      availableSeats: Number(availableSeats),
+      pricePerSeat: Number(pricePerSeat),
+      departureTime,
+      travelDate,
       servicePic: imageUrl,
     });
 
     await newService.save();
 
-    return res
-      .status(201)
-      .json({ message: "Service created successfully!", Service: newService });
+    return res.status(201).json({
+      message: "Service created successfully!",
+      service: newService,
+    });
   } catch (error) {
-    return res
-      .status(500)
-      .json({ message: "Internal Server Error", error: error.message });
+    console.error("Create service error:", error);
+    return res.status(500).json({
+      message: "Internal Server Error",
+      error: error.message,
+    });
   }
 };
 
