@@ -13,7 +13,6 @@ export const createService = async (req, res) => {
       departureTime,
       travelDate,
     } = req.body;
-
     const transporterId = req.user?.id;
     if (!transporterId) {
       return res.status(401).json({ message: "Unauthorized user." });
@@ -23,9 +22,8 @@ export const createService = async (req, res) => {
       return res.status(400).json({ message: "Image upload is required!" });
     }
 
-    const imageUrl = req.file.path; // or transform to full URL if needed
+    const imageUrl = req.file.path; 
 
-    // Cast numeric fields if they come as strings
     const newService = new Service({
       serviceName,
       transporter: transporterId,
