@@ -5,7 +5,7 @@ const serviceSchema = new mongoose.Schema(
     serviceName: {
       type: String,
       required: true,
-      trim: true,
+      trim: true, // Company name / Transporter name
     },
     transporter: {
       type: mongoose.Schema.Types.ObjectId,
@@ -15,7 +15,7 @@ const serviceSchema = new mongoose.Schema(
     serviceCategory: {
       type: String,
       required: true,
-      enum: ["Bus", "Shared Ride", "Rental", "Cargo"],
+      enum: ["people", "parcels", "vehicles"], // Updated to match requirements
       trim: true,
     },
     destinationFrom: {
@@ -28,23 +28,57 @@ const serviceSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
+    routeCities: {
+      type: [String], // Min 5 route locations
+      required: true,
+      validate: {
+        validator: function (val) {
+          return val.length >= 5;
+        },
+        message: "At least 5 route cities are required.",
+      },
+    },
     travelDate: {
       type: Date,
-      required: true,
+      required: true, // Estimated departure date from Romania
     },
     departureTime: {
       type: String,
       required: true,
     },
+    arrivalDate: {
+      type: Date,
+      required: true, // Estimated arrival date in Italy
+    },
+    availabilityDays: {
+      romania: {
+        type: [String], // e.g., ["Monday", "Friday"]
+        required: true,
+      },
+      italy: {
+        type: [String],
+        required: true,
+      },
+    },
     totalSeats: {
       type: Number,
       required: true,
-      min: 1,
+      min: 0, // Should be 0 if not transporting people
     },
     availableSeats: {
       type: Number,
       required: true,
       min: 0,
+    },
+    parcelLoadCapacity: {
+      type: Number, // e.g., in kg
+      min: 0,
+      default: 0,
+    },
+    pickupOption: {
+      type: String,
+      enum: ["yes", "no"],
+      required: true,
     },
     pricePerSeat: {
       type: Number,
