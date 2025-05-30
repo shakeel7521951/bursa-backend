@@ -5,7 +5,7 @@ const serviceSchema = new mongoose.Schema(
     serviceName: {
       type: String,
       required: true,
-      trim: true, // Company name / Transporter name
+      trim: true,
     },
     transporter: {
       type: mongoose.Schema.Types.ObjectId,
@@ -15,7 +15,7 @@ const serviceSchema = new mongoose.Schema(
     serviceCategory: {
       type: String,
       required: true,
-      enum: ["people", "parcels", "vehicles"], // Updated to match requirements
+      enum: ["people", "parcels", "vehicles"],
       trim: true,
     },
     destinationFrom: {
@@ -29,7 +29,7 @@ const serviceSchema = new mongoose.Schema(
       trim: true,
     },
     routeCities: {
-      type: [String], // Min 5 route locations
+      type: [String],
       required: true,
       validate: {
         validator: function (val) {
@@ -40,7 +40,7 @@ const serviceSchema = new mongoose.Schema(
     },
     travelDate: {
       type: Date,
-      required: true, // Estimated departure date from Romania
+      required: true,
     },
     departureTime: {
       type: String,

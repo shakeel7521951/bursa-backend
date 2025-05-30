@@ -128,7 +128,8 @@ export const createService = async (req, res) => {
 
 export const getIndividualServices = async (req, res) => {
   try {
-    const transporterId = req.user?._id;
+    
+    const transporterId = req.user?.id;
     const role = req.user?.role;
     if (role !== "Transporter") {
       return res
@@ -140,7 +141,6 @@ export const getIndividualServices = async (req, res) => {
     if (services.length === 0) {
       return res.status(200).json({ message: "No service found!" });
     }
-
     return res.status(200).json({ services, success: true });
   } catch (error) {
     return res
