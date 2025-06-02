@@ -1,6 +1,9 @@
 import Service from "../models/Service.js";
-//create service....
+// Import Service model if not already
+// const Service = require('../models/Service'); // Adjust path as needed
+
 export const createService = async (req, res) => {
+  console.log("api is running....",req.body);
   try {
     const {
       serviceName,
@@ -18,7 +21,6 @@ export const createService = async (req, res) => {
       pickupOption,
       pricePerSeat,
     } = req.body;
-
     const transporterId = req.user?.id;
 
     if (!transporterId) {
@@ -29,36 +31,41 @@ export const createService = async (req, res) => {
       return res.status(400).json({ message: "Image upload is required!" });
     }
 
+    // Check required fields
+    if (
+      !serviceName || !serviceCategory || !destinationFrom ||
+      !destinationTo || !travelDate || !departureTime ||
+      !arrivalDate || !pricePerSeat
+    ) {
+      return res.status(400).json({ message: "Missing required fields." });
+    }
+
     // Validate service category
     const validCategories = ["people", "parcels", "vehicles"];
     if (!validCategories.includes(serviceCategory)) {
       return res.status(400).json({ message: "Invalid service category." });
     }
 
-    // Parse and validate availabilityDays
+    // Parse availabilityDays
     let parsedAvailabilityDays;
     try {
       parsedAvailabilityDays = JSON.parse(availabilityDays);
     } catch (err) {
       return res.status(400).json({
-        message:
-          "Invalid format for availabilityDays. It must be a JSON object.",
+        message: "Invalid format for availabilityDays. It must be a JSON object.",
       });
     }
 
     if (
-      !parsedAvailabilityDays?.romania ||
-      !Array.isArray(parsedAvailabilityDays.romania) ||
-      !parsedAvailabilityDays?.italy ||
-      !Array.isArray(parsedAvailabilityDays.italy)
+      !parsedAvailabilityDays?.romania || !Array.isArray(parsedAvailabilityDays.romania) ||
+      !parsedAvailabilityDays?.italy || !Array.isArray(parsedAvailabilityDays.italy)
     ) {
       return res.status(400).json({
-        message:
-          "Availability days for Romania and Italy are required as arrays.",
+        message: "Availability days for Romania and Italy are required as arrays.",
       });
     }
 
-    // Validate route cities
+    // Parse routeCities
     let parsedRouteCities = routeCities;
     if (typeof routeCities === "string") {
       try {
@@ -71,43 +78,59 @@ export const createService = async (req, res) => {
     }
 
     if (!Array.isArray(parsedRouteCities) || parsedRouteCities.length < 5) {
-      return res
-        .status(400)
-        .json({ message: "At least 5 route cities are required." });
+      return res.status(400).json({ message: "At least 5 route cities are required." });
     }
 
-    // Validate seats and capacity based on category
-    if (serviceCategory === "people" && Number(totalSeats) <= 0) {
-      return res.status(400).json({
-        message: "Total seats must be greater than 0 for people transport.",
-      });
+    // Validate seat and capacity fields
+    const totalSeatsNum = Number(totalSeats) || 0;
+    const availableSeatsNum = Number(availableSeats) || 0;
+    const parcelCapacity = Number(parcelLoadCapacity) || 0;
+    const pricePerSeatNum = Number(pricePerSeat);
+
+    if (isNaN(pricePerSeatNum) || pricePerSeatNum <= 0) {
+      return res.status(400).json({ message: "Price per seat must be a positive number." });
     }
 
-    if (serviceCategory === "parcels" && Number(parcelLoadCapacity) <= 0) {
-      return res.status(400).json({
-        message:
-          "Parcel load capacity must be greater than 0 for parcel transport.",
-      });
+    if (serviceCategory === "people" && totalSeatsNum <= 0) {
+      return res.status(400).json({ message: "Total seats must be greater than 0 for people transport." });
     }
 
-    const imageUrl = req.file.path; // Adjust if using a static/public folder
+    if (serviceCategory === "parcels" && parcelCapacity <= 0) {
+      return res.status(400).json({ message: "Parcel load capacity must be greater than 0 for parcel transport." });
+    }
 
+    // Validate dates
+    const travelDateObj = new Date(travelDate);
+    const arrivalDateObj = new Date(arrivalDate);
+
+    if (isNaN(travelDateObj.getTime()) || isNaN(arrivalDateObj.getTime())) {
+      return res.status(400).json({ message: "Invalid travel or arrival date." });
+    }
+
+    if (arrivalDateObj < travelDateObj) {
+      return res.status(400).json({ message: "Arrival date cannot be before travel date." });
+    }
+
+    // Normalize image path
+    const imageUrl = `${req.protocol}://${req.get("host")}/uploads/${req.file.filename}`;
+
+    // Create and save service
     const newService = new Service({
       serviceName: serviceName.trim(),
       transporter: transporterId,
       serviceCategory,
       destinationFrom: destinationFrom.trim(),
       destinationTo: destinationTo.trim(),
-      routeCities: parsedRouteCities.map((city) => city.trim()),
-      travelDate: new Date(travelDate),
+      routeCities: parsedRouteCities.map((city) => city?.trim()).filter(Boolean),
+      travelDate: travelDateObj,
       departureTime: departureTime.trim(),
-      arrivalDate: new Date(arrivalDate),
+      arrivalDate: arrivalDateObj,
       availabilityDays: parsedAvailabilityDays,
-      totalSeats: Number(totalSeats),
-      availableSeats: Number(availableSeats),
-      parcelLoadCapacity: Number(parcelLoadCapacity) || 0,
+      totalSeats: totalSeatsNum,
+      availableSeats: availableSeatsNum,
+      parcelLoadCapacity: parcelCapacity,
       pickupOption,
-      pricePerSeat: Number(pricePerSeat),
+      pricePerSeat: pricePerSeatNum,
       servicePic: imageUrl,
     });
 
@@ -115,7 +138,19 @@ export const createService = async (req, res) => {
 
     return res.status(201).json({
       message: "Service created successfully!",
-      service: newService,
+      service: {
+        id: newService._id,
+        serviceName: newService.serviceName,
+        serviceCategory: newService.serviceCategory,
+        destinationFrom: newService.destinationFrom,
+        destinationTo: newService.destinationTo,
+        routeCities: newService.routeCities,
+        travelDate: newService.travelDate,
+        arrivalDate: newService.arrivalDate,
+        pickupOption: newService.pickupOption,
+        pricePerSeat: newService.pricePerSeat,
+        servicePic: newService.servicePic,
+      },
     });
   } catch (error) {
     console.error("Create service error:", error);
@@ -126,9 +161,9 @@ export const createService = async (req, res) => {
   }
 };
 
-export const getIndividualServices = async (req, res) => {s
+
+export const getIndividualServices = async (req, res) => {
   try {
-    
     const transporterId = req.user?.id;
     const role = req.user?.role;
     if (role !== "Transporter") {

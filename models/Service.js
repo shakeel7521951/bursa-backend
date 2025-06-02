@@ -17,6 +17,7 @@ const serviceSchema = new mongoose.Schema(
       required: true,
       enum: ["people", "parcels", "vehicles"],
       trim: true,
+      default:'people'
     },
     destinationFrom: {
       type: String,
