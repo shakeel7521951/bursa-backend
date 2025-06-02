@@ -1,6 +1,4 @@
 import Service from "../models/Service.js";
-// Import Service model if not already
-// const Service = require('../models/Service'); // Adjust path as needed
 
 export const createService = async (req, res) => {
   console.log("api is running....",req.body);
@@ -65,7 +63,6 @@ export const createService = async (req, res) => {
       });
     }
 
-    // Parse routeCities
     let parsedRouteCities = routeCities;
     if (typeof routeCities === "string") {
       try {
