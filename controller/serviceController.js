@@ -126,7 +126,7 @@ export const createService = async (req, res) => {
   }
 };
 
-export const getIndividualServices = async (req, res) => {
+export const getIndividualServices = async (req, res) => {s
   try {
     
     const transporterId = req.user?.id;

@@ -114,9 +114,11 @@ export const updateOrderStatus = async (req, res) => {
       "customerId",
       "name email"
     );
+
     if (!order) {
       return res.status(404).json({ message: "Order not found!" });
     }
+
 
     if (newStatus === "Fulfilled" && order.customerId?.email) {
       await sendOrderFulfillmentEmail(
@@ -132,16 +134,19 @@ export const updateOrderStatus = async (req, res) => {
       { new: true, runValidators: true }
     ).populate("customerId", "name email");
 
+
     return res.status(200).json({
       message: "Order status updated successfully!",
       updatedOrder,
     });
   } catch (error) {
+    console.error("Error updating order status:", error);
     return res
       .status(500)
       .json({ message: "Internal server error.", error: error.message });
   }
 };
+
 
 export const myOrders = async (req, res) => {
   try {
