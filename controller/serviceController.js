@@ -1,7 +1,6 @@
 import Service from "../models/Service.js";
 
 export const createService = async (req, res) => {
-  console.log("api is running....",req.body);
   try {
     const {
       serviceName,
@@ -31,9 +30,14 @@ export const createService = async (req, res) => {
 
     // Check required fields
     if (
-      !serviceName || !serviceCategory || !destinationFrom ||
-      !destinationTo || !travelDate || !departureTime ||
-      !arrivalDate || !pricePerSeat
+      !serviceName ||
+      !serviceCategory ||
+      !destinationFrom ||
+      !destinationTo ||
+      !travelDate ||
+      !departureTime ||
+      !arrivalDate ||
+      !pricePerSeat
     ) {
       return res.status(400).json({ message: "Missing required fields." });
     }
@@ -50,16 +54,20 @@ export const createService = async (req, res) => {
       parsedAvailabilityDays = JSON.parse(availabilityDays);
     } catch (err) {
       return res.status(400).json({
-        message: "Invalid format for availabilityDays. It must be a JSON object.",
+        message:
+          "Invalid format for availabilityDays. It must be a JSON object.",
       });
     }
 
     if (
-      !parsedAvailabilityDays?.romania || !Array.isArray(parsedAvailabilityDays.romania) ||
-      !parsedAvailabilityDays?.italy || !Array.isArray(parsedAvailabilityDays.italy)
+      !parsedAvailabilityDays?.romania ||
+      !Array.isArray(parsedAvailabilityDays.romania) ||
+      !parsedAvailabilityDays?.italy ||
+      !Array.isArray(parsedAvailabilityDays.italy)
     ) {
       return res.status(400).json({
-        message: "Availability days for Romania and Italy are required as arrays.",
+        message:
+          "Availability days for Romania and Italy are required as arrays.",
       });
     }
 
@@ -75,7 +83,9 @@ export const createService = async (req, res) => {
     }
 
     if (!Array.isArray(parsedRouteCities) || parsedRouteCities.length < 5) {
-      return res.status(400).json({ message: "At least 5 route cities are required." });
+      return res
+        .status(400)
+        .json({ message: "At least 5 route cities are required." });
     }
 
     // Validate seat and capacity fields
@@ -85,15 +95,26 @@ export const createService = async (req, res) => {
     const pricePerSeatNum = Number(pricePerSeat);
 
     if (isNaN(pricePerSeatNum) || pricePerSeatNum <= 0) {
-      return res.status(400).json({ message: "Price per seat must be a positive number." });
+      return res
+        .status(400)
+        .json({ message: "Price per seat must be a positive number." });
     }
 
     if (serviceCategory === "people" && totalSeatsNum <= 0) {
-      return res.status(400).json({ message: "Total seats must be greater than 0 for people transport." });
+      return res
+        .status(400)
+        .json({
+          message: "Total seats must be greater than 0 for people transport.",
+        });
     }
 
     if (serviceCategory === "parcels" && parcelCapacity <= 0) {
-      return res.status(400).json({ message: "Parcel load capacity must be greater than 0 for parcel transport." });
+      return res
+        .status(400)
+        .json({
+          message:
+            "Parcel load capacity must be greater than 0 for parcel transport.",
+        });
     }
 
     // Validate dates
@@ -101,16 +122,19 @@ export const createService = async (req, res) => {
     const arrivalDateObj = new Date(arrivalDate);
 
     if (isNaN(travelDateObj.getTime()) || isNaN(arrivalDateObj.getTime())) {
-      return res.status(400).json({ message: "Invalid travel or arrival date." });
+      return res
+        .status(400)
+        .json({ message: "Invalid travel or arrival date." });
     }
 
     if (arrivalDateObj < travelDateObj) {
-      return res.status(400).json({ message: "Arrival date cannot be before travel date." });
+      return res
+        .status(400)
+        .json({ message: "Arrival date cannot be before travel date." });
     }
 
     // Normalize image path
-    const imageUrl = `${req.protocol}://${req.get("host")}/uploads/${req.file.filename}`;
-
+    const imageUrl = req.file.path;
     // Create and save service
     const newService = new Service({
       serviceName: serviceName.trim(),
@@ -118,7 +142,9 @@ export const createService = async (req, res) => {
       serviceCategory,
       destinationFrom: destinationFrom.trim(),
       destinationTo: destinationTo.trim(),
-      routeCities: parsedRouteCities.map((city) => city?.trim()).filter(Boolean),
+      routeCities: parsedRouteCities
+        .map((city) => city?.trim())
+        .filter(Boolean),
       travelDate: travelDateObj,
       departureTime: departureTime.trim(),
       arrivalDate: arrivalDateObj,
@@ -157,7 +183,6 @@ export const createService = async (req, res) => {
     });
   }
 };
-
 
 export const getIndividualServices = async (req, res) => {
   try {
