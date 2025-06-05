@@ -34,6 +34,7 @@ mongoose
   .then(() => console.log("Database is connected"))
   .catch((error) => console.error("Error in connecting database:", error));
 
+console.log(process.env.MONGO_URI)
 app.use("/api/v1", userRoutes);
 app.use("/api/v1", serviceRoutes);
 app.use("/api/v1", orderRoutes);

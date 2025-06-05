@@ -1,4 +1,5 @@
 import Service from "../models/Service.js";
+import Order from '../models/Order.js'
 
 export const createService = async (req, res) => {
   try {
@@ -231,12 +232,13 @@ export const deleteService = async (req, res) => {
     if (!deletedService) {
       return res.status(404).json({ message: "Service not found!" });
     }
+    await Order.deleteMany({ serviceId: id });
 
-    res.status(200).json({ message: "Service Deleted Successfully" });
+    res.status(200).json({ message: "Service and related orders deleted successfully" });
   } catch (error) {
-    res
-      .status(500)
-      .json({ message: "Internal server error! Please try again later" });
+    res.status(500).json({
+      message: "Internal server error! Please try again later",
+    });
   }
 };
 

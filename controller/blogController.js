@@ -192,20 +192,16 @@ export const likeComment = async (req, res) => {
 
     const blog = await Blog.findById(blogId);
     if (!blog) {
-      console.log("Blog not found");
       return res.status(404).json({ message: "Blog not found" });
     }
 
-    console.log("Blog comments:", blog.comments);
 
     const comment = blog.comments.find((c) => c._id.toString() === commentId);
     if (!comment) {
-      console.log("Comment not found");
       return res.status(404).json({ message: "Comment not found" });
     }
 
     const hasLiked = comment.likes.includes(userId);
-    console.log("Has liked:", hasLiked);
 
     if (hasLiked) {
       comment.likes = comment.likes.filter((id) => id.toString() !== userId);
