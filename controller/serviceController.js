@@ -326,97 +326,79 @@ export const deleteService = async (req, res) => {
 export const updateService = async (req, res) => {
   try {
     const { serviceId } = req.params;
-    const updateData = req.body;
-
+    const formData = req.body;
     const existingService = await Service.findById(serviceId);
     if (!existingService) {
       return res.status(404).json({ message: "Service not found!" });
     }
 
-    // Update core fields
-    existingService.serviceName =
-      updateData.serviceName || existingService.serviceName;
-    existingService.serviceCategory =
-      updateData.serviceCategory || existingService.serviceCategory;
-    existingService.destinationFrom =
-      updateData.destinationFrom || existingService.destinationFrom;
-    existingService.destinationTo =
-      updateData.destinationTo || existingService.destinationTo;
-    existingService.travelDate =
-      updateData.travelDate || existingService.travelDate;
-    existingService.departureTime =
-      updateData.departureTime || existingService.departureTime;
-    existingService.arrivalDate =
-      updateData.arrivalDate || existingService.arrivalDate;
-    existingService.totalSeats =
-      updateData.totalSeats ?? existingService.totalSeats;
-    existingService.availableSeats =
-      updateData.availableSeats ?? existingService.availableSeats;
-    existingService.pricePerSeat =
-      updateData.pricePerSeat ?? existingService.pricePerSeat;
-
-    // Handle routeCities, parse if string
-    if (updateData.routeCities) {
-      let routeCitiesArray;
-      if (typeof updateData.routeCities === "string") {
-        try {
-          routeCitiesArray = JSON.parse(updateData.routeCities);
-        } catch (err) {
-          return res
-            .status(400)
-            .json({ message: "Invalid JSON format for routeCities." });
-        }
-      } else {
-        routeCitiesArray = updateData.routeCities;
+    // Handle route cities (accept both array and comma-separated string)
+    if (formData.routeCities) {
+      const routeCitiesArray = Array.isArray(formData.routeCities)
+        ? formData.routeCities
+        : typeof formData.routeCities === 'string' 
+          ? formData.routeCities.split(',').map(city => city.trim()).filter(Boolean)
+          : [];
+      
+      if (routeCitiesArray.length === 0) {
+        return res.status(400).json({ message: "At least one route city is required." });
       }
-
-      if (!Array.isArray(routeCitiesArray) || routeCitiesArray.length < 5) {
-        return res
-          .status(400)
-          .json({ message: "At least 5 route cities are required." });
-      }
-
       existingService.routeCities = routeCitiesArray;
     }
 
-    // Handle availabilityDays, parse if string
-    if (updateData.availabilityDays) {
-      let availabilityDaysObj;
-      if (typeof updateData.availabilityDays === "string") {
-        try {
-          availabilityDaysObj = JSON.parse(updateData.availabilityDays);
-        } catch (err) {
-          return res
-            .status(400)
-            .json({ message: "Invalid JSON for availabilityDays" });
-        }
-      } else {
-        availabilityDaysObj = updateData.availabilityDays;
-      }
+    // Handle availability days (accept both array and comma-separated string)
+    const availabilityDays = {
+      romania: Array.isArray(formData.availabilityDaysRomania)
+        ? formData.availabilityDaysRomania
+        : typeof formData.availabilityDaysRomania === 'string'
+          ? formData.availabilityDaysRomania.split(',').map(day => day.trim()).filter(Boolean)
+          : existingService.availabilityDays.romania,
+      italy: Array.isArray(formData.availabilityDaysItaly)
+        ? formData.availabilityDaysItaly
+        : typeof formData.availabilityDaysItaly === 'string'
+          ? formData.availabilityDaysItaly.split(',').map(day => day.trim()).filter(Boolean)
+          : existingService.availabilityDays.italy
+    };
 
-      if (
-        !availabilityDaysObj.romania ||
-        !Array.isArray(availabilityDaysObj.romania) ||
-        !availabilityDaysObj.italy ||
-        !Array.isArray(availabilityDaysObj.italy)
-      ) {
-        return res.status(400).json({
-          message:
-            "Availability days for Romania and Italy are required as arrays.",
-        });
-      }
+    if (availabilityDays.romania.length === 0 || availabilityDays.italy.length === 0) {
+      return res.status(400).json({ 
+        message: "Availability days for Romania and Italy are required." 
+      });
+    }
+    existingService.availabilityDays = availabilityDays;
 
-      existingService.availabilityDays = availabilityDaysObj;
+    // Update core fields
+    existingService.serviceName = formData.serviceName || existingService.serviceName;
+    existingService.serviceCategory = formData.serviceCategory || existingService.serviceCategory;
+    existingService.destinationFrom = formData.destinationFrom || existingService.destinationFrom;
+    existingService.destinationTo = formData.destinationTo || existingService.destinationTo;
+    existingService.travelDate = formData.travelDate || existingService.travelDate;
+    existingService.departureTime = formData.departureTime || existingService.departureTime;
+    existingService.arrivalDate = formData.arrivalDate || existingService.arrivalDate;
+    existingService.pickupOption = formData.pickupOption || existingService.pickupOption;
+    existingService.price = formData.price || existingService.price;
+
+    // Handle category-specific fields
+    switch (existingService.serviceCategory) {
+      case 'passenger':
+        existingService.totalSeats = formData.totalSeats || existingService.totalSeats;
+        existingService.availableSeats = formData.availableSeats || existingService.availableSeats;
+        break;
+      case 'parcel':
+        existingService.parcelLoadCapacity = formData.parcelLoadCapacity || existingService.parcelLoadCapacity;
+        break;
+      case 'vehicle_trailer':
+        existingService.trailerType = formData.trailerType || existingService.trailerType;
+        break;
+      case 'furniture':
+        existingService.furnitureDetails = formData.furnitureDetails || existingService.furnitureDetails;
+        break;
+      case 'animal':
+        existingService.animalType = formData.animalType || existingService.animalType;
+        break;
     }
 
-    if (updateData.parcelLoadCapacity !== undefined) {
-      existingService.parcelLoadCapacity = updateData.parcelLoadCapacity;
-    }
-
-    if (updateData.pickupOption) {
-      existingService.pickupOption = updateData.pickupOption;
-    }
-
+    // Handle file upload
     if (req.file) {
       existingService.servicePic = req.file.path;
     }

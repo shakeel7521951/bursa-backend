@@ -213,7 +213,8 @@ export const updateOrderStatus = async (req, res) => {
         .json({ message: "Order ID and new status are required." });
     }
 
-    const allowedStatuses = ["Pending", "Fulfilled", "Rejected", "Deleted"];
+    const allowedStatuses = ["pending", "confirmed", "completed", "cancelled", "rejected"];
+
     if (!allowedStatuses.includes(newStatus)) {
       return res.status(400).json({
         message:
