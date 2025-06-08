@@ -8,64 +8,175 @@ export const createOrder = async (req, res) => {
   try {
     const { serviceId } = req.params;
     const customerId = req.user?.id;
+    
+    // Authentication check
     if (!customerId) {
       return res.status(401).json({ message: "User not authenticated" });
     }
+
+    // Get service and validate
     const service = await Service.findById(serviceId);
     if (!service) {
       return res.status(404).json({ message: "Service not found" });
     }
 
-    const { seatsBooked, luggageQuantity, totalPrice } = req.body;
+    const { 
+      seatsBooked, 
+      luggageQuantity,
+      quantity, // For parcels
+      weight,   // For parcels
+      vehicleDetails, // For car towing
+      towingRequirements,
+      vehicleType, // For vehicle trailer
+      trailerRequirements,
+      itemCount, // For furniture
+      dimensions,
+      fragileItems,
+      animalCount, // For animals
+      animalType,
+      specialNeeds,
+      cageRequired,
+      totalPrice,
+      notes
+    } = req.body;
 
-    if (!seatsBooked || seatsBooked < 1) {
-      return res
-        .status(400)
-        .json({ message: "Seats booked must be at least 1" });
+    // Validate based on service category
+    let validationError;
+    switch(service.serviceCategory) {
+      case 'passenger':
+        if (!seatsBooked || seatsBooked < 1) {
+          validationError = "Seats booked must be at least 1";
+        } else if (service.availableSeats < seatsBooked) {
+          validationError = "Not enough available seats";
+        }
+        break;
+
+      case 'parcel':
+        if (!quantity || quantity < 1) {
+          validationError = "Parcel quantity must be at least 1";
+        } else if (weight > service.parcelLoadCapacity) {
+          validationError = `Weight exceeds maximum capacity of ${service.parcelLoadCapacity}kg`;
+        }
+        break;
+
+      case 'car_towing':
+        if (!vehicleDetails) {
+          validationError = "Vehicle details are required";
+        }
+        break;
+
+      case 'vehicle_trailer':
+        if (!vehicleType) {
+          validationError = "Vehicle type is required";
+        }
+        break;
+
+      case 'furniture':
+        if (!itemCount || itemCount < 1) {
+          validationError = "Item count must be at least 1";
+        }
+        break;
+
+      case 'animal':
+        if (!animalCount || animalCount < 1) {
+          validationError = "Animal count must be at least 1";
+        } else if (!animalType) {
+          validationError = "Animal type is required";
+        }
+        break;
+
+      default:
+        validationError = "Unsupported service category";
     }
 
-    if (service.availableSeats < seatsBooked) {
-      return res.status(400).json({ message: "Not enough available seats" });
+    if (validationError) {
+      return res.status(400).json({ message: validationError });
     }
 
-
-    const newOrder = new Order({
+    // Create order data structure
+    const orderData = {
       customerId,
       serviceId,
-      seatsBooked,
-      luggageQuantity,
+      serviceCategory: service.serviceCategory,
       totalPrice,
-    });
+      notes,
+      paymentStatus: 'unpaid',
+      orderStatus: 'pending'
+    };
 
+    // Add category-specific fields
+    switch(service.serviceCategory) {
+      case 'passenger':
+        orderData.seatsBooked = seatsBooked;
+        orderData.luggageQuantity = luggageQuantity || 0;
+        break;
+      case 'parcel':
+        orderData.parcelQuantity = quantity;
+        orderData.parcelWeight = weight || 0;
+        break;
+      case 'car_towing':
+        orderData.vehicleDetails = vehicleDetails;
+        orderData.towingRequirements = towingRequirements || '';
+        break;
+      case 'vehicle_trailer':
+        orderData.vehicleType = vehicleType;
+        orderData.trailerRequirements = trailerRequirements || '';
+        break;
+      case 'furniture':
+        orderData.furnitureItemCount = itemCount;
+        orderData.furnitureDimensions = dimensions || '';
+        orderData.fragileItems = fragileItems || false;
+        break;
+      case 'animal':
+        orderData.animalCount = animalCount;
+        orderData.animalType = animalType;
+        orderData.specialNeeds = specialNeeds || '';
+        orderData.cageRequired = cageRequired || false;
+        break;
+    }
+
+    // Create and save order
+    const newOrder = new Order(orderData);
     await newOrder.save();
 
-    service.availableSeats -= seatsBooked;
-    await service.save();
+    // Update service availability if applicable
+    if (service.serviceCategory === 'passenger') {
+      service.availableSeats -= seatsBooked;
+      await service.save();
+    } else if (service.serviceCategory === 'parcel') {
+      // Update parcel capacity if needed
+      service.parcelLoadCapacity -= weight;
+      await service.save();
+    }
 
-    const populatedOrder = await Order.findById(newOrder._id).populate(
-      "serviceId",
-      "serviceName serviceCategory"
-    );
+    // Populate order details for response
+    const populatedOrder = await Order.findById(newOrder._id)
+      .populate("serviceId", "serviceName serviceCategory price")
+      .populate("customerId", "name email");
 
-    // Send emails
+    // Send notifications
     const adminEmail = process.env.ADMIN_EMAIL;
+    const transporterEmail = service.transporter?.email;
     const customerName = req.user?.name;
     const customerEmail = req.user?.email;
 
-    await sendOrderConfirmationEmail(
-      customerEmail,
-      customerName,
-      populatedOrder
-    );
+    await sendOrderConfirmationEmail(customerEmail, customerName, populatedOrder);
     await sendAdminOrderNotification(adminEmail, customerName, populatedOrder);
+    
+    if (transporterEmail) {
+      await sendTransporterNotification(transporterEmail, populatedOrder);
+    }
 
     return res.status(201).json({
+      success: true,
       message: "Order created successfully!",
       order: populatedOrder,
     });
+
   } catch (error) {
     console.error("Order Creation Error:", error);
     return res.status(500).json({
+      success: false,
       message: "Internal Server Error",
       error: error.message,
     });

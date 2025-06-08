@@ -15,9 +15,15 @@ const serviceSchema = new mongoose.Schema(
     serviceCategory: {
       type: String,
       required: true,
-      enum: ["people", "parcels", "vehicles"],
-      trim: true,
-      default:'people'
+      enum: [
+        "passenger", 
+        "parcel", 
+        "car_towing", 
+        "vehicle_trailer", 
+        "furniture", 
+        "animal"
+      ],
+      trim: true
     },
     destinationFrom: {
       type: String,
@@ -34,9 +40,9 @@ const serviceSchema = new mongoose.Schema(
       required: true,
       validate: {
         validator: function (val) {
-          return val.length >= 5;
+          return val.length > 0;
         },
-        message: "At least 5 route cities are required.",
+        message: "At least 1 route city is required.",
       },
     },
     travelDate: {
@@ -49,39 +55,76 @@ const serviceSchema = new mongoose.Schema(
     },
     arrivalDate: {
       type: Date,
-      required: true, // Estimated arrival date in Italy
+      required: true,
     },
     availabilityDays: {
       romania: {
-        type: [String], // e.g., ["Monday", "Friday"]
+        type: [String],
         required: true,
+        validate: {
+          validator: function (val) {
+            return val.length > 0;
+          },
+          message: "At least 1 availability day for Romania is required.",
+        },
       },
       italy: {
         type: [String],
         required: true,
+        validate: {
+          validator: function (val) {
+            return val.length > 0;
+          },
+          message: "At least 1 availability day for Italy is required.",
+        },
       },
     },
+    // Passenger Transport fields
     totalSeats: {
       type: Number,
-      required: true,
-      min: 0, // Should be 0 if not transporting people
+      min: 0,
+      default: 0,
     },
     availableSeats: {
       type: Number,
-      required: true,
-      min: 0,
-    },
-    parcelLoadCapacity: {
-      type: Number, // e.g., in kg
       min: 0,
       default: 0,
+    },
+    // Parcel Transport fields
+    parcelLoadCapacity: {
+      type: Number,
+      min: 0,
+      default: 0,
+    },
+    // Car Towing fields
+    vehicleType: {
+      type: String,
+      enum: ["sedan", "suv", "truck", "van", ""],
+      default: "",
+    },
+    // Vehicle Transport on Trailer fields
+    trailerType: {
+      type: String,
+      enum: ["flatbed", "enclosed", "lowboy", ""],
+      default: "",
+    },
+    // Furniture Transport fields
+    furnitureDetails: {
+      type: String,
+      default: "",
+    },
+    // Animal Transport fields
+    animalType: {
+      type: String,
+      enum: ["dog", "cat", "bird", "livestock", "other", ""],
+      default: "",
     },
     pickupOption: {
       type: String,
       enum: ["yes", "no"],
       required: true,
     },
-    pricePerSeat: {
+    price: {
       type: Number,
       required: true,
       min: 0,
@@ -93,6 +136,11 @@ const serviceSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+// Add index for better query performance
+serviceSchema.index({ serviceCategory: 1 });
+serviceSchema.index({ destinationFrom: 1, destinationTo: 1 });
+serviceSchema.index({ travelDate: 1 });
 
 const Service = mongoose.model("Service", serviceSchema);
 export default Service;
