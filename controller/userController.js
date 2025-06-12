@@ -22,7 +22,7 @@ export const register = async (req, res) => {
       <h3 style="font-size: 32px; font-weight: bold; color: #4CAF50;">${otp}</h3>
       <p>If you did not request this, please ignore this email.</p>
       <p>Best regards,</p>
-      <p>The Car Rental Service Team</p>
+      <p>Bursa Trans Romania Italy</p>
     `;
 
     await sendMail(email, subject, text);
@@ -124,7 +124,7 @@ export const forgotPasswordOTP = async (req, res) => {
       <h3 style="font-size: 32px; font-weight: bold; color: #4CAF50;">${otp}</h3>
       <p>This OTP is valid for a limited time. If you did not request a password reset, please ignore this email or contact our support team immediately.</p>
       <p>Best regards,</p>
-      <p>The Car Rental Service Team</p>
+      <p>Bursa Trans Romania Italy</p>
     `;
 
     await sendMail(email, subject, text);

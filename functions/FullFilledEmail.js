@@ -1,30 +1,30 @@
 import SendMail from "../utils/SendMail.js";
 
-const sendOrderFulfillmentEmail = async (customerEmail, customerName, order) => {
-    const subject = "🚗 Your Order is Fulfilled - Trend Car Care";
+const sendOrderStatusEmail = async (customerEmail, customerName, order, status) => {
+  const statusCapitalized = status.charAt(0).toUpperCase() + status.slice(1);
 
-    const text = `
+  const subject = `📦 Your Transport Order Status Updated: ${statusCapitalized} - Bursa Trans Romania Italy`;
+
+  const text = `
     <p>Hello <strong>${customerName}</strong>,</p>
 
-    <p>We are delighted to inform you that your order with Trend Car Care has been successfully fulfilled! 🚗</p>
+    <p>This is to inform you that the status of your transport order with <strong>Bursa Trans Romania Italy</strong> has been updated to: <strong>${statusCapitalized}</strong>.</p>
 
-    <p>Thank you for choosing us for your travel needs. We truly appreciate your trust in our service and hope you had a smooth and comfortable experience.</p>
+    <p>Whether it was luggage, passengers, pets, or furniture — we’re committed to keeping you informed at every step of the journey. 🧳🐾🪑</p>
 
-    <p>If you have any feedback or require further assistance, please don’t hesitate to reach out. We are always here to help!</p>
+    <p>If you have any questions or concerns, please don’t hesitate to reach out to us:</p>
+    <p>📧 contact@bursatrans.com | 📞 +40-123-456-789</p>
 
-    <p>📧 support@trendcarcare.com | 📞 +123-456-7890</p>
+    <p>Thank you for choosing our international transport services!</p>
 
-    <p>We look forward to serving you again in the future!</p>
+    <p>Best regards,<br><strong>The Bursa Trans Romania Italy Team</strong></p>
+  `;
 
-    <p>Best regards,</p>
-    <p><strong>The Trend Car Care Team</strong></p>
-    `;
-
-    try {
-        await SendMail(customerEmail, subject, text);
-    } catch (error) {
-        throw new Error(`Failed to send fulfillment email: ${error?.response?.body || error.message}`);
-    }
+  try {
+    await SendMail(customerEmail, subject, text);
+  } catch (error) {
+    throw new Error(`Failed to send status update email: ${error?.response?.body || error.message}`);
+  }
 };
 
-export default sendOrderFulfillmentEmail;
+export default sendOrderStatusEmail;
