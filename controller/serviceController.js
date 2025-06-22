@@ -26,13 +26,14 @@ export const createService = async (req, res) => {
     } = req.body;
 
     const transporterId = req.user?.id;
-    // Validate authentication and required fields
+
+    // Validare autentificare și câmpuri necesare
     if (!transporterId) {
-      return res.status(401).json({ message: "Unauthorized user." });
+      return res.status(401).json({ message: "Utilizator neautorizat." });
     }
 
     if (!req.file) {
-      return res.status(400).json({ message: "Service image is required!" });
+      return res.status(400).json({ message: "Imaginea serviciului este obligatorie!" });
     }
 
     const requiredFields = [
@@ -49,11 +50,11 @@ export const createService = async (req, res) => {
 
     for (const field of requiredFields) {
       if (!req.body[field]) {
-        return res.status(400).json({ message: `${field} is required.` });
+        return res.status(400).json({ message: `${field} este obligatoriu.` });
       }
     }
 
-    // Validate service category
+    // Validare categorie serviciu
     const validCategories = [
       'passenger',
       'parcel',
@@ -64,10 +65,10 @@ export const createService = async (req, res) => {
     ];
 
     if (!validCategories.includes(serviceCategory)) {
-      return res.status(400).json({ message: "Invalid service category." });
+      return res.status(400).json({ message: "Categorie de serviciu invalidă." });
     }
 
-    // Parse and validate route cities
+    // Parsare orașe de pe rută
     let parsedRouteCities = [];
     if (typeof routeCities === 'string') {
       parsedRouteCities = routeCities.split(',').map(city => city.trim()).filter(Boolean);
@@ -76,10 +77,10 @@ export const createService = async (req, res) => {
     }
 
     if (parsedRouteCities.length === 0) {
-      return res.status(400).json({ message: "At least one route city is required." });
+      return res.status(400).json({ message: "Este necesar cel puțin un oraș de pe rută." });
     }
 
-    // Parse and validate availability days
+    // Parsare zile de disponibilitate
     const parseAvailabilityDays = (days) => {
       if (typeof days === 'string') {
         return days.split(',').map(day => day.trim()).filter(Boolean);
@@ -92,30 +93,30 @@ export const createService = async (req, res) => {
 
     if (romaniaDays.length === 0 || italyDays.length === 0) {
       return res.status(400).json({
-        message: "Availability days for both Romania and Italy are required."
+        message: "Zilele de disponibilitate pentru România și Italia sunt obligatorii."
       });
     }
 
-    // Validate dates
+    // Validare date
     const travelDateObj = new Date(travelDate);
     const arrivalDateObj = new Date(arrivalDate);
 
     if (isNaN(travelDateObj.getTime()) || isNaN(arrivalDateObj.getTime())) {
-      return res.status(400).json({ message: "Invalid travel or arrival date." });
+      return res.status(400).json({ message: "Dată de plecare sau sosire invalidă." });
     }
 
     if (arrivalDateObj < travelDateObj) {
       return res.status(400).json({ 
-        message: "Arrival date must be after travel date." 
+        message: "Data sosirii trebuie să fie după data plecării." 
       });
     }
 
-    // Validate category-specific fields
+    // Validare câmpuri specifice categoriei
     const validationErrors = [];
     const priceNum = Number(price);
 
     if (isNaN(priceNum) || priceNum <= 0) {
-      validationErrors.push("Price must be a positive number.");
+      validationErrors.push("Prețul trebuie să fie un număr pozitiv.");
     }
 
     switch (serviceCategory) {
@@ -123,53 +124,53 @@ export const createService = async (req, res) => {
         const seatsNum = Number(totalSeats);
         const availSeatsNum = Number(availableSeats);
         if (isNaN(seatsNum) || seatsNum <= 0) {
-          validationErrors.push("Total seats must be greater than 0.");
+          validationErrors.push("Numărul total de locuri trebuie să fie mai mare decât 0.");
         }
         if (isNaN(availSeatsNum) || availSeatsNum < 0 || availSeatsNum > seatsNum) {
-          validationErrors.push("Available seats must be between 0 and total seats.");
+          validationErrors.push("Locurile disponibile trebuie să fie între 0 și totalul locurilor.");
         }
         break;
-      
+
       case 'parcel':
         const capacity = Number(parcelLoadCapacity);
         if (isNaN(capacity) || capacity <= 0) {
-          validationErrors.push("Parcel load capacity must be greater than 0.");
+          validationErrors.push("Capacitatea de încărcare a coletelor trebuie să fie mai mare decât 0.");
         }
         break;
-      
+
       case 'car_towing':
         if (!vehicleType) {
-          validationErrors.push("Vehicle type is required for car towing.");
+          validationErrors.push("Tipul vehiculului este obligatoriu pentru tractare.");
         }
         break;
-      
+
       case 'vehicle_trailer':
         if (!trailerType) {
-          validationErrors.push("Trailer type is required for vehicle transport.");
+          validationErrors.push("Tipul remorcii este obligatoriu pentru transport auto.");
         }
         break;
-      
+
       case 'furniture':
         if (!furnitureDetails) {
-          validationErrors.push("Furniture details are required.");
+          validationErrors.push("Detaliile mobilierului sunt obligatorii.");
         }
         break;
-      
+
       case 'animal':
         if (!animalType) {
-          validationErrors.push("Animal type is required.");
+          validationErrors.push("Tipul animalului este obligatoriu.");
         }
         break;
     }
 
     if (validationErrors.length > 0) {
       return res.status(400).json({ 
-        message: "Validation errors", 
+        message: "Erori de validare", 
         errors: validationErrors 
       });
     }
 
-    // Prepare service data
+    // Structura serviciului
     const serviceData = {
       serviceName: serviceName.trim(),
       transporter: transporterId,
@@ -189,7 +190,7 @@ export const createService = async (req, res) => {
       servicePic: req.file.path
     };
 
-    // Add category-specific fields
+    // Câmpuri specifice categoriei
     switch (serviceCategory) {
       case 'passenger':
         serviceData.totalSeats = Number(totalSeats);
@@ -212,11 +213,11 @@ export const createService = async (req, res) => {
         break;
     }
 
-    // Create and save service
+    // Salvare serviciu
     const newService = new Service(serviceData);
     await newService.save();
 
-    // Prepare response
+    // Răspuns
     const responseData = {
       id: newService._id,
       serviceName: newService.serviceName,
@@ -229,7 +230,6 @@ export const createService = async (req, res) => {
       servicePic: newService.servicePic
     };
 
-    // Add category-specific fields to response
     switch (serviceCategory) {
       case 'passenger':
         responseData.totalSeats = newService.totalSeats;
@@ -253,14 +253,14 @@ export const createService = async (req, res) => {
     }
 
     return res.status(201).json({
-      message: "Service created successfully!",
+      message: "Serviciul a fost creat cu succes!",
       service: responseData
     });
 
   } catch (error) {
-    console.error("Create service error:", error);
+    console.error("Eroare la crearea serviciului:", error);
     return res.status(500).json({
-      message: "Internal Server Error",
+      message: "Eroare internă a serverului",
       error: error.message,
     });
   }
@@ -273,18 +273,18 @@ export const getIndividualServices = async (req, res) => {
     if (role !== "Transporter") {
       return res
         .status(403)
-        .json({ message: "Access denied: not a Transporter" });
+        .json({ message: "Acces refuzat: utilizatorul nu este Transportator" });
     }
 
     const services = await Service.find({ transporter: transporterId });
     if (services.length === 0) {
-      return res.status(200).json({ message: "No service found!" });
+      return res.status(200).json({ message: "Nu a fost găsit niciun serviciu!" });
     }
     return res.status(200).json({ services, success: true });
   } catch (error) {
     return res
       .status(500)
-      .json({ message: "Internal server error", error: error.message });
+      .json({ message: "Eroare internă a serverului", error: error.message });
   }
 };
 
@@ -293,15 +293,15 @@ export const getAllServices = async (req, res) => {
     const services = await Service.find().populate("transporter", "name email");
 
     if (services.length === 0) {
-      return res.status(200).json({ message: "No Service found!" });
+      return res.status(200).json({ message: "Nu a fost găsit niciun serviciu!" });
     }
 
     res.status(200).json({ services });
   } catch (error) {
-    console.error("Error in getAllServices:", error);
+    console.error("Eroare în getAllServices:", error);
     res
       .status(500)
-      .json({ message: "Internal server error.", error: error.message });
+      .json({ message: "Eroare internă a serverului.", error: error.message });
   }
 };
 
@@ -311,14 +311,14 @@ export const deleteService = async (req, res) => {
     const deletedService = await Service.findByIdAndDelete(id);
 
     if (!deletedService) {
-      return res.status(404).json({ message: "Service not found!" });
+      return res.status(404).json({ message: "Serviciul nu a fost găsit!" });
     }
     await Order.deleteMany({ serviceId: id });
 
-    res.status(200).json({ message: "Service and related orders deleted successfully" });
+    res.status(200).json({ message: "Serviciul și comenzile aferente au fost șterse cu succes" });
   } catch (error) {
     res.status(500).json({
-      message: "Internal server error! Please try again later",
+      message: "Eroare internă a serverului! Vă rugăm să încercați din nou mai târziu",
     });
   }
 };
@@ -329,7 +329,7 @@ export const updateService = async (req, res) => {
     const formData = req.body;
     const existingService = await Service.findById(serviceId);
     if (!existingService) {
-      return res.status(404).json({ message: "Service not found!" });
+      return res.status(404).json({ message: "Serviciul nu a fost găsit!" });
     }
 
     // Handle route cities (accept both array and comma-separated string)
@@ -341,7 +341,7 @@ export const updateService = async (req, res) => {
           : [];
       
       if (routeCitiesArray.length === 0) {
-        return res.status(400).json({ message: "At least one route city is required." });
+        return res.status(400).json({ message: "Este necesar cel puțin un oraș de rută." });
       }
       existingService.routeCities = routeCitiesArray;
     }
@@ -362,7 +362,7 @@ export const updateService = async (req, res) => {
 
     if (availabilityDays.romania.length === 0 || availabilityDays.italy.length === 0) {
       return res.status(400).json({ 
-        message: "Availability days for Romania and Italy are required." 
+        message: "Zilele de disponibilitate pentru România și Italia sunt obligatorii." 
       });
     }
     existingService.availabilityDays = availabilityDays;
@@ -406,13 +406,13 @@ export const updateService = async (req, res) => {
     const updatedService = await existingService.save();
 
     return res.status(200).json({
-      message: "Service updated successfully!",
+      message: "Serviciul a fost actualizat cu succes!",
       service: updatedService,
     });
   } catch (error) {
-    console.error("Error updating service:", error);
+    console.error("Eroare la actualizarea serviciului:", error);
     return res.status(500).json({
-      message: "Internal Server Error",
+      message: "Eroare internă a serverului",
       error: error.message,
     });
   }

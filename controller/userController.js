@@ -6,7 +6,8 @@ export const register = async (req, res) => {
     const { name, email, role, password } = req.body;
 
     let user = await User.findOne({ email });
-    if (user) return res.status(400).json({ message: "User already exists" });
+    if (user)
+      return res.status(400).json({ message: "Utilizatorul există deja." });
 
     user = new User({ name, email, role, password, status: "unverified" });
 
@@ -14,14 +15,14 @@ export const register = async (req, res) => {
 
     await user.save();
 
-    const subject = "Verify Your Email - Car Rental Service";
+    const subject = "Verifică-ți adresa de email - Bursa Trans Romania Italy";
     const text = `
-      <p>Hello <strong>${name}</strong>,</p>
-      <p>Thank you for signing up! To complete your registration, please verify your email.</p>
-      <p>Your OTP for verification is:</p>
+      <p>Salut <strong>${name}</strong>,</p>
+      <p>Îți mulțumim pentru înregistrare! Pentru a finaliza procesul, te rugăm să-ți verifici adresa de email.</p>
+      <p>Codul tău OTP pentru verificare este:</p>
       <h3 style="font-size: 32px; font-weight: bold; color: #4CAF50;">${otp}</h3>
-      <p>If you did not request this, please ignore this email.</p>
-      <p>Best regards,</p>
+      <p>Dacă nu ai solicitat acest lucru, poți ignora acest email.</p>
+      <p>Cu stimă,</p>
       <p>Bursa Trans Romania Italy</p>
     `;
 
@@ -29,9 +30,9 @@ export const register = async (req, res) => {
 
     res
       .status(201)
-      .json({ message: "OTP sent to email. Verify your account." });
+      .json({ message: "OTP trimis pe email. Verifică-ți contul." });
   } catch (error) {
-    res.status(500).json({ message: "Server error", error: error.message });
+    res.status(500).json({ message: "Eroare de server", error: error.message });
   }
 };
 
@@ -40,13 +41,13 @@ export const verifyUser = async (req, res) => {
     const { email, otp } = req.body;
 
     const user = await User.findOne({ email });
-    if (!user) return res.status(404).json({ message: "User not found" });
+    if (!user)
+      return res.status(404).json({ message: "Utilizatorul nu a fost găsit." });
 
     if (!user.verifyOTP(otp)) {
-      return res.status(400).json({ message: "Invalid or expired OTP" });
+      return res.status(400).json({ message: "OTP invalid sau expirat." });
     }
 
-    // Mark user as verified
     user.otp = undefined;
     user.otpExpires = undefined;
     user.status = "verified";
@@ -60,9 +61,9 @@ export const verifyUser = async (req, res) => {
       sameSite: "None",
     });
 
-    res.status(200).json({ message: "User verified successfully" });
+    res.status(200).json({ message: "Utilizator verificat cu succes." });
   } catch (error) {
-    res.status(500).json({ message: "Server error", error: error.message });
+    res.status(500).json({ message: "Eroare de server", error: error.message });
   }
 };
 
@@ -72,11 +73,11 @@ export const appVerifyUser = async (req, res) => {
 
     const user = await User.findOne({ email });
     if (!user) {
-      return res.status(404).json({ message: "User not found" });
+      return res.status(404).json({ message: "Utilizatorul nu a fost găsit." });
     }
 
     if (!user.verifyOTP(otp)) {
-      return res.status(400).json({ message: "Invalid or expired OTP" });
+      return res.status(400).json({ message: "OTP invalid sau expirat." });
     }
 
     user.otp = undefined;
@@ -87,7 +88,7 @@ export const appVerifyUser = async (req, res) => {
     const token = user.generateToken();
 
     res.status(200).json({
-      message: "User verified successfully",
+      message: "Utilizator verificat cu succes.",
       token,
       user: {
         id: user._id,
@@ -96,7 +97,7 @@ export const appVerifyUser = async (req, res) => {
       },
     });
   } catch (error) {
-    res.status(500).json({ message: "Server error", error: error.message });
+    res.status(500).json({ message: "Eroare de server", error: error.message });
   }
 };
 
@@ -104,26 +105,26 @@ export const forgotPasswordOTP = async (req, res) => {
   try {
     const { email } = req.body;
     if (!email) {
-      return res.status(400).json({ message: "Email is required." });
+      return res.status(400).json({ message: "Emailul este obligatoriu." });
     }
 
     const user = await User.findOne({ email });
     if (!user) {
       return res
         .status(404)
-        .json({ message: "User not found with this email." });
+        .json({ message: "Nu a fost găsit niciun utilizator cu acest email." });
     }
 
     const otp = await user.generateOTP();
 
     const name = user.name;
-    const subject = "OTP for Password Reset";
+    const subject = "OTP pentru resetarea parolei";
     const text = `
-      <p>Hello <strong>${name}</strong>,</p>
-      <p>We received a request to reset your password for your account. To proceed, please use the OTP below:</p>
+      <p>Salut <strong>${name}</strong>,</p>
+      <p>Am primit o cerere de resetare a parolei contului tău. Pentru a continua, folosește OTP-ul de mai jos:</p>
       <h3 style="font-size: 32px; font-weight: bold; color: #4CAF50;">${otp}</h3>
-      <p>This OTP is valid for a limited time. If you did not request a password reset, please ignore this email or contact our support team immediately.</p>
-      <p>Best regards,</p>
+      <p>Acest cod este valabil pentru o perioadă limitată. Dacă nu ai solicitat resetarea parolei, ignoră acest email sau contactează echipa noastră de suport.</p>
+      <p>Cu stimă,</p>
       <p>Bursa Trans Romania Italy</p>
     `;
 
@@ -132,10 +133,10 @@ export const forgotPasswordOTP = async (req, res) => {
     user.otp = otp;
     await user.save();
 
-    res.status(200).json({ message: "OTP sent successfully!" });
+    res.status(200).json({ message: "OTP trimis cu succes!" });
   } catch (error) {
-    console.error("Error in forgotPasswordOtp:", error);
-    res.status(500).json({ message: "Internal Server Error." });
+    console.error("Eroare în forgotPasswordOtp:", error);
+    res.status(500).json({ message: "Eroare internă a serverului." });
   }
 };
 
@@ -144,30 +145,28 @@ export const verifyOTP = async (req, res) => {
     const { email, otp } = req.body;
 
     if (!email || !otp) {
-      return res.status(400).json({ message: "Email and OTP are required." });
+      return res
+        .status(400)
+        .json({ message: "Emailul și OTP-ul sunt obligatorii." });
     }
 
     const user = await User.findOne({ email });
     if (!user) {
       return res
         .status(404)
-        .json({ message: "User not found with this email." });
+        .json({ message: "Nu a fost găsit niciun utilizator cu acest email." });
     }
 
     if (user.otp !== otp) {
-      return res.status(400).json({ message: "Invalid or Expired OTP." });
+      return res.status(400).json({ message: "OTP invalid sau expirat." });
     }
 
-    // user.otp = undefined;
-    // await user.save();
-
-    res.status(200).json({ message: "OTP verified successfully." });
+    res.status(200).json({ message: "OTP verificat cu succes." });
   } catch (error) {
-    console.error("Error in verifyOTP:", error);
-    res.status(500).json({ message: "Internal Server Error." });
+    console.error("Eroare în verifyOTP:", error);
+    res.status(500).json({ message: "Eroare internă a serverului." });
   }
 };
-
 export const resetPassword = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -175,29 +174,32 @@ export const resetPassword = async (req, res) => {
     if (!email || !password) {
       return res
         .status(400)
-        .json({ message: "Email and Password are required." });
+        .json({ message: "Emailul și parola sunt obligatorii." });
     }
 
     const user = await User.findOne({ email });
     if (!user) {
       return res
         .status(404)
-        .json({ message: "User not found with this email." });
+        .json({ message: "Utilizatorul nu a fost găsit cu acest email." });
     }
 
     if (!user.otp) {
       return res
         .status(400)
-        .json({ message: "OTP not verified. Please verify your OTP first." });
+        .json({
+          message:
+            "OTP-ul nu este verificat. Vă rugăm să verificați OTP-ul mai întâi.",
+        });
     }
 
     user.password = password;
     user.otp = undefined;
     await user.save();
 
-    res.status(200).json({ message: "Password reset successfully." });
+    res.status(200).json({ message: "Parola a fost resetată cu succes." });
   } catch (error) {
-    res.status(500).json({ message: "Internal Server Error." });
+    res.status(500).json({ message: "Eroare internă a serverului." });
   }
 };
 
@@ -206,18 +208,21 @@ export const login = async (req, res) => {
     const { email, password } = req.body;
 
     const user = await User.findOne({ email });
-    if (!user) return res.status(404).json({ message: "User not found" });
+    if (!user)
+      return res.status(404).json({ message: "Utilizatorul nu a fost găsit." });
 
     if (user.status === "unverified") {
       await User.deleteOne({ email });
       return res
         .status(403)
-        .json({ message: "Account not verified. Please register again." });
+        .json({
+          message: "Cont neverificat. Vă rugăm să vă înregistrați din nou.",
+        });
     }
 
     const isMatch = await user.comparePassword(password);
     if (!isMatch)
-      return res.status(400).json({ message: "Invalid email or password" });
+      return res.status(400).json({ message: "Email sau parolă incorectă." });
 
     const token = user.generateToken();
     res.cookie("token", token, {
@@ -227,9 +232,9 @@ export const login = async (req, res) => {
       sameSite: "None",
     });
 
-    res.status(200).json({ message: "Login successful", user });
+    res.status(200).json({ message: "Autentificare reușită", user });
   } catch (error) {
-    res.status(500).json({ message: "Server error", error: error.message });
+    res.status(500).json({ message: "Eroare de server", error: error.message });
   }
 };
 
@@ -239,25 +244,27 @@ export const appLogin = async (req, res) => {
 
     const user = await User.findOne({ email });
     if (!user) {
-      return res.status(404).json({ message: "User not found" });
+      return res.status(404).json({ message: "Utilizatorul nu a fost găsit." });
     }
 
     if (user.status === "unverified") {
       await User.deleteOne({ email });
       return res
         .status(403)
-        .json({ message: "Account not verified. Please register again." });
+        .json({
+          message: "Cont neverificat. Vă rugăm să vă înregistrați din nou.",
+        });
     }
 
     const isMatch = await user.comparePassword(password);
     if (!isMatch) {
-      return res.status(400).json({ message: "Invalid email or password" });
+      return res.status(400).json({ message: "Email sau parolă incorectă." });
     }
 
     const token = user.generateToken();
 
     res.status(200).json({
-      message: "Login successful",
+      message: "Autentificare reușită",
       token,
       user: {
         id: user._id,
@@ -266,13 +273,13 @@ export const appLogin = async (req, res) => {
       },
     });
   } catch (error) {
-    res.status(500).json({ message: "Server error", error: error.message });
+    res.status(500).json({ message: "Eroare de server", error: error.message });
   }
 };
 
 export const logout = (req, res) => {
   res.clearCookie("token");
-  res.status(200).json({ message: "User logged out successfully" });
+  res.status(200).json({ message: "Utilizator delogat cu succes." });
 };
 
 export const myProfile = async (req, res) => {
@@ -284,7 +291,7 @@ export const myProfile = async (req, res) => {
       user,
     });
   } catch (error) {
-    res.status(500).json({ message: "Internal server error" });
+    res.status(500).json({ message: "Eroare internă a serverului." });
   }
 };
 
@@ -293,27 +300,27 @@ export const updatePassword = async (req, res, next) => {
     const { currentPassword, newPassword, confirmPassword } = req.body;
 
     if (!currentPassword || !newPassword || !confirmPassword) {
-      return next(new errorHandler("All fields are required", 400));
+      return next(new errorHandler("Toate câmpurile sunt obligatorii.", 400));
     }
 
     const user = await User.findById(req.user.id);
     if (!user) {
-      return res.status(400).json("User not found!");
+      return res.status(400).json("Utilizatorul nu a fost găsit!");
     }
 
     const isMatch = await user.comparePassword(currentPassword);
     if (!isMatch) {
-      return res.status(403).json("Old password is incorrect!");
+      return res.status(403).json("Parola veche este incorectă!");
     }
 
     if (currentPassword === newPassword) {
       return res
         .status(401)
-        .json({ message: "Old and New Password could not be same" });
+        .json({ message: "Parola veche și cea nouă nu pot fi identice." });
     }
 
     if (newPassword !== confirmPassword) {
-      return res.status(401).json("Passwords do not match!");
+      return res.status(401).json("Parolele nu coincid!");
     }
 
     user.password = newPassword;
@@ -321,24 +328,26 @@ export const updatePassword = async (req, res, next) => {
 
     res.status(200).json({
       success: true,
-      message: "Password updated successfully",
+      message: "Parola a fost actualizată cu succes.",
     });
   } catch (error) {
     res
       .status(500)
-      .json({ message: "Internal server error! Please try again later" });
+      .json({
+        message: "Eroare internă a serverului. Încercați din nou mai târziu.",
+      });
   }
 };
 
 export const updateProfile = async (req, res) => {
   try {
     if (!req.user) {
-      return res.status(401).json({ message: "Unauthorized request" });
+      return res.status(401).json({ message: "Cerere neautorizată." });
     }
 
     const user = await User.findById(req.user.id);
     if (!user) {
-      return res.status(404).json({ message: "User not found" });
+      return res.status(404).json({ message: "Utilizatorul nu a fost găsit." });
     }
 
     const { role } = req.body;
@@ -347,10 +356,10 @@ export const updateProfile = async (req, res) => {
 
     return res
       .status(200)
-      .json({ message: "Profile updated successfully", user });
+      .json({ message: "Profil actualizat cu succes.", user });
   } catch (error) {
-    console.error("Error updating profile:", error);
-    return res.status(500).json({ message: "Internal server error" });
+    console.error("Eroare la actualizarea profilului:", error);
+    return res.status(500).json({ message: "Eroare internă a serverului." });
   }
 };
 
@@ -358,13 +367,15 @@ export const allUsers = async (req, res) => {
   try {
     const users = await User.find();
     if (!users) {
-      res.status(404).json({ message: "NO User Found!" });
+      res.status(404).json({ message: "Niciun utilizator găsit!" });
     }
     res.status(200).json(users);
   } catch (error) {
     res
       .status(500)
-      .json({ message: "Internal server error.Please try again later" });
+      .json({
+        message: "Eroare internă a serverului. Încercați din nou mai târziu.",
+      });
   }
 };
 
@@ -375,7 +386,7 @@ export const updateUserRole = async (req, res) => {
     if (!userId || !role) {
       return res
         .status(400)
-        .json({ message: "User ID and role are required." });
+        .json({ message: "ID-ul utilizatorului și rolul sunt obligatorii." });
     }
 
     const updateUserRole = await User.findByIdAndUpdate(
@@ -387,17 +398,19 @@ export const updateUserRole = async (req, res) => {
     if (!updateUserRole) {
       return res
         .status(400)
-        .json({ message: "Something went wrong. Please try again later." });
+        .json({
+          message: "Ceva nu a funcționat. Încercați din nou mai târziu.",
+        });
     }
 
     res.status(200).json({
-      message: "User role updated successfully",
+      message: "Rolul utilizatorului a fost actualizat cu succes.",
       user: updateUserRole,
     });
   } catch (error) {
-    console.error("Error updating user role:", error);
+    console.error("Eroare la actualizarea rolului utilizatorului:", error);
     res
       .status(500)
-      .json({ message: "Internal server error", error: error.message });
+      .json({ message: "Eroare internă a serverului", error: error.message });
   }
 };

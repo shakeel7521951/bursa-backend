@@ -4,33 +4,33 @@ export const sendTransporterNotification = async (transporterEmail, order) => {
   const service = order?.serviceId || {};
   const customer = order?.customerId || {};
 
-  const serviceCategory = order?.serviceCategory || "Not Provided";
+  const serviceCategory = order?.serviceCategory || "Nu este specificat";
 
   // Common Fields
-  const customerName = customer?.name || "Customer Name Not Provided";
-  const customerPhone = customer?.phone || "Phone Not Provided";
-  const customerEmail = customer?.email || "Email Not Provided";
+  const customerName = customer?.name || "Nume client indisponibil";
+  const customerPhone = customer?.phone || "Telefon indisponibil";
+  const customerEmail = customer?.email || "Email indisponibil";
 
-  const serviceName = service?.serviceName || "Not Provided";
-  const from = service?.destinationFrom || "Not Provided";
-  const to = service?.destinationTo || "Not Provided";
-  const travelDate = service?.travelDate ? new Date(service.travelDate).toLocaleDateString() : "Not Provided";
-  const pickupOption = service?.pickupOption === "yes" ? "Available" : "Not Available";
+  const serviceName = service?.serviceName || "Nu este specificat";
+  const from = service?.destinationFrom || "Nu este specificat";
+  const to = service?.destinationTo || "Nu este specificat";
+  const travelDate = service?.travelDate ? new Date(service.travelDate).toLocaleDateString() : "Nu este specificat";
+  const pickupOption = service?.pickupOption === "yes" ? "Disponibil" : "Indisponibil";
 
   const commonDetails = `
-    <li><strong>Customer Name:</strong> ${customerName}</li>
-    <li><strong>Customer Phone:</strong> ${customerPhone}</li>
-    <li><strong>Customer Email:</strong> ${customerEmail}</li>
-    <li><strong>Service Name:</strong> ${serviceName}</li>
-    <li><strong>Category:</strong> ${serviceCategory}</li>
-    <li><strong>From:</strong> ${from}</li>
-    <li><strong>To:</strong> ${to}</li>
-    <li><strong>Travel Date:</strong> ${travelDate}</li>
-    <li><strong>Pickup Option:</strong> ${pickupOption}</li>
-    <li><strong>Total Price:</strong> €${order.totalPrice}</li>
-    <li><strong>Order Status:</strong> ${order.orderStatus}</li>
-    <li><strong>Payment Status:</strong> ${order.paymentStatus}</li>
-    <li><strong>Payment Method:</strong> ${order.paymentMethod || "Not Provided"}</li>
+    <li><strong>Nume client:</strong> ${customerName}</li>
+    <li><strong>Telefon client:</strong> ${customerPhone}</li>
+    <li><strong>Email client:</strong> ${customerEmail}</li>
+    <li><strong>Nume serviciu:</strong> ${serviceName}</li>
+    <li><strong>Categorie:</strong> ${serviceCategory}</li>
+    <li><strong>De la:</strong> ${from}</li>
+    <li><strong>La:</strong> ${to}</li>
+    <li><strong>Data plecării:</strong> ${travelDate}</li>
+    <li><strong>Preluare de la adresă:</strong> ${pickupOption}</li>
+    <li><strong>Preț total:</strong> €${order.totalPrice}</li>
+    <li><strong>Status comandă:</strong> ${order.orderStatus}</li>
+    <li><strong>Status plată:</strong> ${order.paymentStatus}</li>
+    <li><strong>Metodă de plată:</strong> ${order.paymentMethod || "Nu este specificată"}</li>
   `;
 
   // Add category-specific fields
@@ -39,63 +39,63 @@ export const sendTransporterNotification = async (transporterEmail, order) => {
   switch (serviceCategory) {
     case "passenger":
       categoryDetails += `
-        <li><strong>Seats Booked:</strong> ${order.seatsBooked}</li>
-        <li><strong>Luggage Quantity:</strong> ${order.luggageQuantity}</li>
+        <li><strong>Locuri rezervate:</strong> ${order.seatsBooked}</li>
+        <li><strong>Bagaje:</strong> ${order.luggageQuantity}</li>
       `;
       break;
 
     case "parcel":
       categoryDetails += `
-        <li><strong>Parcel Quantity:</strong> ${order.parcelQuantity}</li>
-        <li><strong>Parcel Weight:</strong> ${order.parcelWeight} kg</li>
+        <li><strong>Cantitate colete:</strong> ${order.parcelQuantity}</li>
+        <li><strong>Greutate totală:</strong> ${order.parcelWeight} kg</li>
       `;
       break;
 
     case "car_towing":
       categoryDetails += `
-        <li><strong>Vehicle Details:</strong> ${order.vehicleDetails}</li>
-        <li><strong>Towing Requirements:</strong> ${order.towingRequirements}</li>
+        <li><strong>Detalii vehicul:</strong> ${order.vehicleDetails}</li>
+        <li><strong>Cerințe tractare:</strong> ${order.towingRequirements}</li>
       `;
       break;
 
     case "vehicle_trailer":
       categoryDetails += `
-        <li><strong>Vehicle Type:</strong> ${order.vehicleType}</li>
-        <li><strong>Trailer Requirements:</strong> ${order.trailerRequirements}</li>
+        <li><strong>Tip vehicul:</strong> ${order.vehicleType}</li>
+        <li><strong>Cerințe remorcă:</strong> ${order.trailerRequirements}</li>
       `;
       break;
 
     case "furniture":
       categoryDetails += `
-        <li><strong>Furniture Item Count:</strong> ${order.furnitureItemCount}</li>
-        <li><strong>Dimensions:</strong> ${order.furnitureDimensions}</li>
-        <li><strong>Fragile Items:</strong> ${order.fragileItems ? "Yes" : "No"}</li>
+        <li><strong>Număr piese mobilier:</strong> ${order.furnitureItemCount}</li>
+        <li><strong>Dimensiuni:</strong> ${order.furnitureDimensions}</li>
+        <li><strong>Fragil:</strong> ${order.fragileItems ? "Da" : "Nu"}</li>
       `;
       break;
 
     case "animal":
       categoryDetails += `
-        <li><strong>Animal Count:</strong> ${order.animalCount}</li>
-        <li><strong>Animal Type:</strong> ${order.animalType}</li>
-        <li><strong>Special Needs:</strong> ${order.specialNeeds || "None"}</li>
-        <li><strong>Cage Required:</strong> ${order.cageRequired ? "Yes" : "No"}</li>
+        <li><strong>Număr animale:</strong> ${order.animalCount}</li>
+        <li><strong>Tip animal:</strong> ${order.animalType}</li>
+        <li><strong>Nevoi speciale:</strong> ${order.specialNeeds || "Niciuna"}</li>
+        <li><strong>Cușcă necesară:</strong> ${order.cageRequired ? "Da" : "Nu"}</li>
       `;
       break;
 
     default:
-      categoryDetails += `<li>No additional details available for this category.</li>`;
+      categoryDetails += `<li>Nu există detalii suplimentare pentru această categorie.</li>`;
   }
 
-  const notes = order?.notes ? `<p><strong>Additional Notes:</strong> ${order.notes}</p>` : "";
+  const notes = order?.notes ? `<p><strong>Observații suplimentare:</strong> ${order.notes}</p>` : "";
 
-  const subject = `🚛 New Assignment: Transport Order for ${customerName}`;
+  const subject = `🚛 Comandă nouă alocată: Transport pentru ${customerName}`;
 
   const text = `
-    <p><strong>Dear Transporter,</strong></p>
+    <p><strong>Stimate Transportator,</strong></p>
 
-    <p>You have been assigned a new transport order from <strong>Bursa Trans Romania Italy</strong>.</p>
+    <p>Ați fost alocat pentru o nouă comandă de transport de la <strong>Bursa Trans România Italia</strong>.</p>
 
-    <h3 style="color: #007BFF;">🧾 Order Details:</h3>
+    <h3 style="color: #007BFF;">🧾 Detalii comandă:</h3>
     <ul>
       ${commonDetails}
       ${categoryDetails}
@@ -103,19 +103,19 @@ export const sendTransporterNotification = async (transporterEmail, order) => {
 
     ${notes}
 
-    <p>📦 This order may include transporting passengers, parcels, vehicles, furniture, animals, or other goods.</p>
+    <p>📦 Comanda poate include transport de pasageri, colete, vehicule, mobilier, animale sau alte bunuri.</p>
 
-    <p>Please ensure timely pickup and delivery, and contact the customer if necessary.</p>
+    <p>Vă rugăm să asigurați preluarea și livrarea la timp și să contactați clientul dacă este necesar.</p>
 
-    <p>Regards,</p>
-    <p><strong>Bursa Trans Romania Italy Team</strong></p>
+    <p>Cu stimă,</p>
+    <p><strong>Echipa Bursa Trans România Italia</strong></p>
   `;
 
   try {
     await SendMail(transporterEmail, subject, text);
   } catch (error) {
     throw new Error(
-      `Failed to send transporter notification email: ${
+      `Trimiterea emailului către transportator a eșuat: ${
         error?.response?.body || error.message
       }`
     );

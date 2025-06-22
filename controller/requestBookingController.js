@@ -9,16 +9,16 @@ export const createRequestBooking = async (req, res) => {
     if (!transporterId || !requestId) {
       return res
         .status(400)
-        .json({ message: "Transporter ID or Request ID is missing" });
+        .json({ message: "ID-ul transportatorului sau ID-ul cererii lipsește" });
     }
 
     const transportRequest = await TransportRequest.findById(requestId);
 
     if (!transportRequest) {
-      return res.status(404).json({ message: "Transport request not found" });
+      return res.status(404).json({ message: "Cererea de transport nu a fost găsită" });
     }
-    transportRequest.status = "accepted";
 
+    transportRequest.status = "accepted";
     await transportRequest.save();
 
     const newRequest = new RequestBooking({
@@ -29,14 +29,14 @@ export const createRequestBooking = async (req, res) => {
     await newRequest.save();
 
     res.status(201).json({
-      message: "Booking request accepted successfully",
+      message: "Cererea de rezervare a fost acceptată cu succes",
       data: newRequest,
     });
   } catch (error) {
-    console.error("Error creating booking request:", error);
+    console.error("Eroare la crearea cererii de rezervare:", error);
     res
       .status(500)
-      .json({ message: "Server error while creating booking request" });
+      .json({ message: "Eroare de server la crearea cererii de rezervare" });
   }
 };
 
@@ -47,11 +47,10 @@ export const getAcceptedTransporterRequests = async (req, res) => {
     if (!transporterId) {
       return res
         .status(401)
-        .json({ message: "Unauthorized: Transporter ID not found" });
+        .json({ message: "Neautorizat: ID-ul transportatorului nu a fost găsit" });
     }
 
     const bookings = await RequestBooking.find({ transporterId });
-
     const requestIds = bookings.map((booking) => booking.requestId);
 
     const acceptedRequests = await TransportRequest.find({
@@ -60,14 +59,14 @@ export const getAcceptedTransporterRequests = async (req, res) => {
     });
 
     res.status(200).json({
-      message: "Accepted requests fetched successfully",
+      message: "Cererile acceptate au fost preluate cu succes",
       data: acceptedRequests,
     });
   } catch (error) {
-    console.error("Error fetching accepted requests:", error);
+    console.error("Eroare la preluarea cererilor acceptate:", error);
     res
       .status(500)
-      .json({ message: "Server error while fetching accepted requests" });
+      .json({ message: "Eroare de server la preluarea cererilor acceptate" });
   }
 };
 
@@ -81,13 +80,13 @@ export const markRequestFulfilled = async (req, res) => {
     );
 
     if (!updated) {
-      return res.status(404).json({ message: "Request not found" });
+      return res.status(404).json({ message: "Cererea nu a fost găsită" });
     }
 
     res
       .status(200)
-      .json({ message: "Request marked as fulfilled", data: updated });
+      .json({ message: "Cererea a fost marcată ca finalizată", data: updated });
   } catch (error) {
-    res.status(500).json({ message: "Error updating request status" });
+    res.status(500).json({ message: "Eroare la actualizarea statusului cererii" });
   }
 };

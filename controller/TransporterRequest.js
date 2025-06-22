@@ -4,12 +4,13 @@ export const createTransportRequest = async (req, res) => {
   try {
     const { departure, destination, date, passengers, category, notes } = req.body;
     const userId = req.user?.id;
-    if(!userId){
-        res.status(401).json({message:"User not login! Please login first"})
+
+    if (!userId) {
+      return res.status(401).json({ message: "Utilizatorul nu este autentificat! Vă rugăm să vă conectați mai întâi." });
     }
 
     if (!departure || !destination || !date || !passengers || !category) {
-      return res.status(400).json({ message: "All required fields must be filled." });
+      return res.status(400).json({ message: "Toate câmpurile obligatorii trebuie completate." });
     }
 
     const newRequest = new TransportRequest({
@@ -23,11 +24,11 @@ export const createTransportRequest = async (req, res) => {
     });
 
     const savedRequest = await newRequest.save();
-    res.status(201).json({ message: "Transport request created successfully", data: savedRequest });
+    res.status(201).json({ message: "Cererea de transport a fost creată cu succes", data: savedRequest });
 
   } catch (error) {
-    console.error("Error creating transport request:", error);
-    res.status(500).json({ message: "Internal Server Error" });
+    console.error("Eroare la crearea cererii de transport:", error);
+    res.status(500).json({ message: "Eroare internă a serverului" });
   }
 };
 
@@ -36,8 +37,8 @@ export const getAllTransportRequests = async (req, res) => {
     const requests = await TransportRequest.find().populate("userId", "name email");
     res.status(200).json({ data: requests });
   } catch (error) {
-    console.error("Error fetching requests:", error);
-    res.status(500).json({ message: "Internal Server Error" });
+    console.error("Eroare la obținerea cererilor:", error);
+    res.status(500).json({ message: "Eroare internă a serverului" });
   }
 };
 
@@ -49,23 +50,23 @@ export const updateTransportRequest = async (req, res) => {
     const request = await TransportRequest.findById(id);
 
     if (!request) {
-      return res.status(404).json({ message: "Request not found" });
+      return res.status(404).json({ message: "Cererea nu a fost găsită" });
     }
 
     if (request.userId.toString() !== userId.toString()) {
-      return res.status(403).json({ message: "Unauthorized to update this request" });
+      return res.status(403).json({ message: "Nu aveți permisiunea de a actualiza această cerere" });
     }
 
     if (request.status !== "pending") {
-      return res.status(400).json({ message: "Only pending requests can be edited" });
+      return res.status(400).json({ message: "Doar cererile în așteptare pot fi editate" });
     }
 
     const updated = await TransportRequest.findByIdAndUpdate(id, req.body, { new: true });
-    res.status(200).json({ message: "Request updated successfully", data: updated });
+    res.status(200).json({ message: "Cererea a fost actualizată cu succes", data: updated });
 
   } catch (error) {
-    console.error("Error updating request:", error);
-    res.status(500).json({ message: "Internal Server Error" });
+    console.error("Eroare la actualizarea cererii:", error);
+    res.status(500).json({ message: "Eroare internă a serverului" });
   }
 };
 
@@ -77,23 +78,23 @@ export const deleteTransportRequest = async (req, res) => {
     const request = await TransportRequest.findById(id);
 
     if (!request) {
-      return res.status(404).json({ message: "Request not found" });
+      return res.status(404).json({ message: "Cererea nu a fost găsită" });
     }
 
     if (request.userId.toString() !== userId.toString()) {
-      return res.status(403).json({ message: "Unauthorized to delete this request" });
+      return res.status(403).json({ message: "Nu aveți permisiunea de a șterge această cerere" });
     }
 
     if (request.status !== "pending") {
-      return res.status(400).json({ message: "Only pending requests can be deleted" });
+      return res.status(400).json({ message: "Doar cererile în așteptare pot fi șterse" });
     }
 
     await TransportRequest.findByIdAndDelete(id);
-    res.status(200).json({ message: "Request deleted successfully" });
+    res.status(200).json({ message: "Cererea a fost ștearsă cu succes" });
 
   } catch (error) {
-    console.error("Error deleting request:", error);
-    res.status(500).json({ message: "Internal Server Error" });
+    console.error("Eroare la ștergerea cererii:", error);
+    res.status(500).json({ message: "Eroare internă a serverului" });
   }
 };
 
@@ -102,14 +103,14 @@ export const getUserTransportRequests = async (req, res) => {
     const userId = req.user?.id;
 
     if (!userId) {
-      return res.status(401).json({ message: "Unauthorized. Please login." });
+      return res.status(401).json({ message: "Neautorizat. Vă rugăm să vă autentificați." });
     }
 
     const userRequests = await TransportRequest.find({ userId }).sort({ createdAt: -1 });
 
     res.status(200).json({ data: userRequests });
   } catch (error) {
-    console.error("Error fetching user's requests:", error);
-    res.status(500).json({ message: "Internal Server Error" });
+    console.error("Eroare la obținerea cererilor utilizatorului:", error);
+    res.status(500).json({ message: "Eroare internă a serverului" });
   }
 };

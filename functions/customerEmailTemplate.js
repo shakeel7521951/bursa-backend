@@ -27,59 +27,59 @@ const sendOrderConfirmationEmail = async (
   } = orderDetails;
 
   const {
-    serviceName = "Not Available",
-    destinationFrom = "Not Available",
-    destinationTo = "Not Available",
+    serviceName = "Indisponibil",
+    destinationFrom = "Indisponibil",
+    destinationTo = "Indisponibil",
     travelDate,
-    pickupOption = "Not Available",
+    pickupOption = "Indisponibil",
   } = serviceId || {};
 
   const formattedDate = travelDate
     ? new Date(travelDate).toLocaleDateString()
-    : "Not Available";
+    : "Indisponibil";
 
-  const subject = "🚌 Your Transport Booking Confirmation - Bursa Trans Romania Italy";
+  const subject = "🚌 Confirmare rezervare transport - Bursa Trans România Italia";
 
   let extraDetails = "";
 
   switch (serviceCategory) {
     case "passenger":
       extraDetails = `
-        <li><strong>Seats Booked:</strong> ${seatsBooked}</li>
-        <li><strong>Luggage Quantity:</strong> ${luggageQuantity}</li>
+        <li><strong>Locuri rezervate:</strong> ${seatsBooked}</li>
+        <li><strong>Număr bagaje:</strong> ${luggageQuantity}</li>
       `;
       break;
     case "parcel":
       extraDetails = `
-        <li><strong>Parcel Quantity:</strong> ${parcelQuantity}</li>
-        <li><strong>Parcel Weight:</strong> ${parcelWeight} kg</li>
+        <li><strong>Cantitate colete:</strong> ${parcelQuantity}</li>
+        <li><strong>Greutate colete:</strong> ${parcelWeight} kg</li>
       `;
       break;
     case "car_towing":
       extraDetails = `
-        <li><strong>Vehicle Details:</strong> ${vehicleDetails}</li>
-        <li><strong>Towing Requirements:</strong> ${towingRequirements}</li>
+        <li><strong>Detalii vehicul:</strong> ${vehicleDetails}</li>
+        <li><strong>Cerințe tractare:</strong> ${towingRequirements}</li>
       `;
       break;
     case "vehicle_trailer":
       extraDetails = `
-        <li><strong>Vehicle Type:</strong> ${vehicleType}</li>
-        <li><strong>Trailer Requirements:</strong> ${trailerRequirements}</li>
+        <li><strong>Tip vehicul:</strong> ${vehicleType}</li>
+        <li><strong>Cerințe remorcă:</strong> ${trailerRequirements}</li>
       `;
       break;
     case "furniture":
       extraDetails = `
-        <li><strong>Furniture Item Count:</strong> ${furnitureItemCount}</li>
-        <li><strong>Dimensions:</strong> ${furnitureDimensions}</li>
-        <li><strong>Fragile Items:</strong> ${fragileItems ? "Yes" : "No"}</li>
+        <li><strong>Număr obiecte mobilier:</strong> ${furnitureItemCount}</li>
+        <li><strong>Dimensiuni:</strong> ${furnitureDimensions}</li>
+        <li><strong>Obiecte fragile:</strong> ${fragileItems ? "Da" : "Nu"}</li>
       `;
       break;
     case "animal":
       extraDetails = `
-        <li><strong>Animal Count:</strong> ${animalCount}</li>
-        <li><strong>Animal Type:</strong> ${animalType}</li>
-        <li><strong>Special Needs:</strong> ${specialNeeds || "None"}</li>
-        <li><strong>Cage Required:</strong> ${cageRequired ? "Yes" : "No"}</li>
+        <li><strong>Număr animale:</strong> ${animalCount}</li>
+        <li><strong>Tip animal:</strong> ${animalType}</li>
+        <li><strong>Nevoi speciale:</strong> ${specialNeeds || "Niciuna"}</li>
+        <li><strong>Cușcă necesară:</strong> ${cageRequired ? "Da" : "Nu"}</li>
       `;
       break;
     default:
@@ -87,30 +87,30 @@ const sendOrderConfirmationEmail = async (
   }
 
   const text = `
-    <p>Hello <strong>${customerName}</strong>,</p>
+    <p>Bună <strong>${customerName}</strong>,</p>
 
-    <p>Thank you for booking with <strong>Bursa Trans Romania Italy</strong>. We specialize in safe and reliable transportation between Romania and Italy, offering services for <strong>passengers, luggage, furniture, animals, and more</strong>.</p>
+    <p>Vă mulțumim pentru rezervarea făcută cu <strong>Bursa Trans România Italia</strong>. Suntem specializați în transport sigur și de încredere între România și Italia, oferind servicii pentru <strong>pasageri, bagaje, mobilier, animale și altele</strong>.</p>
 
-    <h3 style="color: #4CAF50;">📦 Your Booking Details:</h3>
+    <h3 style="color: #4CAF50;">📦 Detalii rezervare:</h3>
     <ul>
-      <li><strong>Service Name:</strong> ${serviceName}</li>
-      <li><strong>Service Type:</strong> ${serviceCategory}</li>
-      <li><strong>From:</strong> ${destinationFrom}</li>
-      <li><strong>To:</strong> ${destinationTo}</li>
-      <li><strong>Travel Date:</strong> ${formattedDate}</li>
-      <li><strong>Pickup Option:</strong> ${
-        pickupOption === "yes" ? "Available" : "Not Available"
+      <li><strong>Nume serviciu:</strong> ${serviceName}</li>
+      <li><strong>Tip serviciu:</strong> ${serviceCategory}</li>
+      <li><strong>De la:</strong> ${destinationFrom}</li>
+      <li><strong>La:</strong> ${destinationTo}</li>
+      <li><strong>Data plecării:</strong> ${formattedDate}</li>
+      <li><strong>Preluare de la domiciliu:</strong> ${
+        pickupOption === "yes" ? "Disponibilă" : "Indisponibilă"
       }</li>
       ${extraDetails}
-      <li><strong>Total Price:</strong> €${totalPrice}</li>
+      <li><strong>Preț total:</strong> €${totalPrice}</li>
     </ul>
 
-    <p>🚌 Our team will arrive at the pickup location as scheduled. If you have any updates or special requirements, please contact us in advance.</p>
+    <p>🚌 Echipa noastră va ajunge la locația de preluare conform programării. Dacă aveți actualizări sau cerințe speciale, vă rugăm să ne contactați în avans.</p>
 
-    <p>We appreciate your trust in our services and look forward to serving your transport needs between Romania and Italy.</p>
+    <p>Vă mulțumim pentru încrederea acordată serviciilor noastre și așteptăm cu nerăbdare să vă deservim nevoile de transport între România și Italia.</p>
 
-    <p>Warm regards,</p>
-    <p><strong>Bursa Trans Romania Italy</strong></p>
+    <p>Cu respect,</p>
+    <p><strong>Bursa Trans România Italia</strong></p>
     <p>📧 support@bursatransromaniaitalia.com | 📞 +123-456-7890</p>
   `;
 
@@ -118,7 +118,7 @@ const sendOrderConfirmationEmail = async (
     await SendMail(customerEmail, subject, text);
   } catch (error) {
     throw new Error(
-      `Failed to send confirmation email: ${error?.response?.body || error.message}`
+      `Trimiterea emailului de confirmare a eșuat: ${error?.response?.body || error.message}`
     );
   }
 };

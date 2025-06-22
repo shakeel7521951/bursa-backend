@@ -13,13 +13,13 @@ export const createOrder = async (req, res) => {
 
     // Authentication check
     if (!customerId) {
-      return res.status(401).json({ message: "User not authenticated" });
+      return res.status(401).json({ message: "Utilizatorul nu este autentificat" });
     }
 
     // Get service and validate
     const service = await Service.findById(serviceId);
     if (!service) {
-      return res.status(404).json({ message: "Service not found" });
+      return res.status(404).json({ message: "Serviciul nu a fost găsit" });
     }
 
     const {
@@ -47,48 +47,48 @@ export const createOrder = async (req, res) => {
     switch (service.serviceCategory) {
       case "passenger":
         if (!seatsBooked || seatsBooked < 1) {
-          validationError = "Seats booked must be at least 1";
+          validationError = "Numărul de locuri rezervate trebuie să fie cel puțin 1";
         } else if (service.availableSeats < seatsBooked) {
-          validationError = "Not enough available seats";
+          validationError = "Nu sunt suficiente locuri disponibile";
         }
         break;
 
       case "parcel":
         if (!quantity || quantity < 1) {
-          validationError = "Parcel quantity must be at least 1";
+          validationError = "Cantitatea de colete trebuie să fie cel puțin 1";
         } else if (weight > service.parcelLoadCapacity) {
-          validationError = `Weight exceeds maximum capacity of ${service.parcelLoadCapacity}kg`;
+          validationError = `Greutatea depășește capacitatea maximă de ${service.parcelLoadCapacity}kg`;
         }
         break;
 
       case "car_towing":
         if (!vehicleDetails) {
-          validationError = "Vehicle details are required";
+          validationError = "Detaliile vehiculului sunt necesare";
         }
         break;
 
       case "vehicle_trailer":
         if (!vehicleType) {
-          validationError = "Vehicle type is required";
+          validationError = "Tipul vehiculului este necesar";
         }
         break;
 
       case "furniture":
         if (!itemCount || itemCount < 1) {
-          validationError = "Item count must be at least 1";
+          validationError = "Numărul de obiecte trebuie să fie cel puțin 1";
         }
         break;
 
       case "animal":
         if (!animalCount || animalCount < 1) {
-          validationError = "Animal count must be at least 1";
+          validationError = "Numărul de animale trebuie să fie cel puțin 1";
         } else if (!animalType) {
-          validationError = "Animal type is required";
+          validationError = "Tipul de animal este necesar";
         }
         break;
 
       default:
-        validationError = "Unsupported service category";
+        validationError = "Categorie de serviciu nesuportată";
     }
 
     if (validationError) {
@@ -146,7 +146,6 @@ export const createOrder = async (req, res) => {
       service.availableSeats -= seatsBooked;
       await service.save();
     } else if (service.serviceCategory === "parcel") {
-      // Update parcel capacity if needed
       service.parcelLoadCapacity -= weight;
       await service.save();
     }
@@ -180,14 +179,14 @@ export const createOrder = async (req, res) => {
 
     return res.status(201).json({
       success: true,
-      message: "Order created successfully!",
+      message: "Comanda a fost creată cu succes!",
       order: populatedOrder,
     });
   } catch (error) {
     console.error("Order Creation Error:", error);
     return res.status(500).json({
       success: false,
-      message: "Internal Server Error",
+      message: "Eroare internă a serverului",
       error: error.message,
     });
   }
@@ -203,13 +202,13 @@ export const getAllOrders = async (req, res) => {
       );
 
     if (!orders || orders.length === 0) {
-      return res.status(404).json({ message: "No orders found!" });
+      return res.status(404).json({ message: "Nu s-au găsit comenzi!" });
     }
 
     res.status(200).json({ orders });
   } catch (error) {
     res.status(500).json({
-      message: "Internal server error.",
+      message: "Eroare internă a serverului. Vă rugăm să încercați din nou mai târziu!",
       error: error.message,
     });
   }
@@ -221,7 +220,7 @@ export const updateOrderStatus = async (req, res) => {
     const { newStatus } = req.body;
 
     if (!orderId || !newStatus) {
-      return res.status(400).json({ message: "Order ID and new status are required." });
+      return res.status(400).json({ message: "ID-ul comenzii și noul statut sunt obligatorii." });
     }
 
     const allowedStatuses = [
@@ -242,7 +241,7 @@ export const updateOrderStatus = async (req, res) => {
     const order = await Order.findById(orderId).populate("customerId", "name email");
 
     if (!order) {
-      return res.status(404).json({ message: "Order not found!" });
+      return res.status(404).json({ message: "Comanda nu a fost găsită!" });
     }
 
     // Send email for any status update
@@ -257,12 +256,12 @@ export const updateOrderStatus = async (req, res) => {
     ).populate("customerId", "name email");
 
     return res.status(200).json({
-      message: "Order status updated successfully!",
+      message: "Starea comenzii a fost actualizată cu succes!",
       updatedOrder,
     });
   } catch (error) {
     console.error("Error updating order status:", error);
-    return res.status(500).json({ message: "Internal server error.", error: error.message });
+    return res.status(500).json({ message: "Internal Server Error.", error: error.message });
   }
 };
 
@@ -278,7 +277,7 @@ export const myOrders = async (req, res) => {
     if (!myOrders.length) {
       return res
         .status(404)
-        .json({ success: false, message: "No orders found." });
+        .json({ success: false, message: "Nu au fost găsite comenzi." });
     }
 
     res.status(200).json({ success: true, orders: myOrders });
@@ -303,12 +302,12 @@ export const updateOrder = async (req, res) => {
     if (!updatedOrder) {
       return res
         .status(404)
-        .json({ success: false, message: "Order not found!" });
+        .json({ success: false, message: "Nu au fost găsite comenzi." });
     }
 
     res.status(200).json({
       success: true,
-      message: "Order updated successfully!",
+      message: "Comanda a fost actualizată cu succes!",
       order: updatedOrder,
     });
   } catch (error) {
@@ -327,7 +326,7 @@ export const deleteOrder = async (req, res) => {
     // Find the order
     const order = await Order.findById(orderId);
     if (!order) {
-      return res.status(404).json({ message: "Order not found" });
+      return res.status(404).json({ message: "Nu au fost găsite comenzi." });
     }
 
     // Admin logic
@@ -336,11 +335,11 @@ export const deleteOrder = async (req, res) => {
         // Admin cancels pending orders
         order.orderStatus = "Cancelled";
         await order.save();
-        return res.status(200).json({ message: "Order Cancelled By Admin" });
+        return res.status(200).json({ message: "Comandă anulată de administrator" });
       } else {
         // Admin deletes non-pending orders
         await Order.findByIdAndDelete(orderId);
-        return res.status(200).json({ message: "Order Deleted By Admin" });
+        return res.status(200).json({ message: "Comandă ștearsă de administrator" });
       }
     }
 
@@ -352,18 +351,18 @@ export const deleteOrder = async (req, res) => {
         await order.save();
         return res
           .status(200)
-          .json({ message: "Order cancelled Successfully!" });
+          .json({ message: "Comandă anulată cu succes!" });
       } else {
         // User cannot cancel or delete non-pending orders
         // Instead, mark the order as deleted by the user
         order.deletedBy = "user";
         await order.save();
-        return res.status(200).json({ message: "Order Deleted Successfully!" });
+        return res.status(200).json({ message: "Comanda a fost ștearsă cu succes!" });
       }
     }
 
     // Unauthorized action
-    return res.status(403).json({ message: "Unauthorized action" });
+    return res.status(403).json({ message: "Acțiune neautorizată" });
   } catch (error) {
     console.error("Error in deleteOrder:", error);
     res.status(500).json({ message: "Internal server error" });

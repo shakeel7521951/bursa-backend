@@ -3,39 +3,38 @@ import SendMail from "../utils/SendMail.js";
 const sendAdminOrderNotification = async (adminEmail, customerName, order) => {
   const service = order?.serviceId;
 
-  const serviceCategory = order?.serviceCategory || "Not Available";
-  const serviceName = service?.serviceName || "Not Available";
-  const destinationFrom = service?.destinationFrom || "Not Available";
-  const destinationTo = service?.destinationTo || "Not Available";
+  const serviceCategory = order?.serviceCategory || "Indisponibil";
+  const serviceName = service?.serviceName || "Indisponibil";
+  const destinationFrom = service?.destinationFrom || "Indisponibil";
+  const destinationTo = service?.destinationTo || "Indisponibil";
   const travelDate = service?.travelDate
     ? new Date(service.travelDate).toLocaleDateString()
-    : "Not Available";
-  const pickupOption = service?.pickupOption === "yes" ? "Yes" : "No";
+    : "Indisponibil";
+  const pickupOption = service?.pickupOption === "yes" ? "Da" : "Nu";
 
-  const subject = `🛎️ New Order - ${customerName} has booked a ${serviceCategory} transport`;
+  const subject = `🛎️ Comandă nouă - ${customerName} a rezervat un transport pentru categoria ${serviceCategory}`;
 
   let details = `
     <ul>
-      <li><strong>Customer:</strong> ${customerName}</li>
-      <li><strong>Category:</strong> ${serviceCategory}</li>
-      <li><strong>Service:</strong> ${serviceName}</li>
-      <li><strong>From:</strong> ${destinationFrom}</li>
-      <li><strong>To:</strong> ${destinationTo}</li>
-      <li><strong>Travel Date:</strong> ${travelDate}</li>
-      <li><strong>Pickup Option:</strong> ${pickupOption}</li>
-      <li><strong>Total Price:</strong> €${order.totalPrice}</li>
-      <li><strong>Order Status:</strong> ${order.orderStatus}</li>
-      <li><strong>Payment Status:</strong> ${order.paymentStatus}</li>
+      <li><strong>Client:</strong> ${customerName}</li>
+      <li><strong>Categorie:</strong> ${serviceCategory}</li>
+      <li><strong>Serviciu:</strong> ${serviceName}</li>
+      <li><strong>De la:</strong> ${destinationFrom}</li>
+      <li><strong>La:</strong> ${destinationTo}</li>
+      <li><strong>Data plecării:</strong> ${travelDate}</li>
+      <li><strong>Preluare de la domiciliu:</strong> ${pickupOption}</li>
+      <li><strong>Preț total:</strong> €${order.totalPrice}</li>
+      <li><strong>Status comandă:</strong> ${order.orderStatus}</li>
+      <li><strong>Status plată:</strong> ${order.paymentStatus}</li>
     </ul>
   `;
 
-  // Add category-specific fields
   switch (serviceCategory) {
     case "passenger":
       details += `
         <ul>
-          <li><strong>Seats Booked:</strong> ${order.seatsBooked}</li>
-          <li><strong>Luggage Quantity:</strong> ${order.luggageQuantity}</li>
+          <li><strong>Locuri rezervate:</strong> ${order.seatsBooked}</li>
+          <li><strong>Număr bagaje:</strong> ${order.luggageQuantity}</li>
         </ul>
       `;
       break;
@@ -43,8 +42,8 @@ const sendAdminOrderNotification = async (adminEmail, customerName, order) => {
     case "parcel":
       details += `
         <ul>
-          <li><strong>Parcel Quantity:</strong> ${order.parcelQuantity}</li>
-          <li><strong>Parcel Weight:</strong> ${order.parcelWeight} kg</li>
+          <li><strong>Cantitate colete:</strong> ${order.parcelQuantity}</li>
+          <li><strong>Greutate totală:</strong> ${order.parcelWeight} kg</li>
         </ul>
       `;
       break;
@@ -52,8 +51,8 @@ const sendAdminOrderNotification = async (adminEmail, customerName, order) => {
     case "car_towing":
       details += `
         <ul>
-          <li><strong>Vehicle Details:</strong> ${order.vehicleDetails}</li>
-          <li><strong>Towing Requirements:</strong> ${order.towingRequirements}</li>
+          <li><strong>Detalii vehicul:</strong> ${order.vehicleDetails}</li>
+          <li><strong>Cerințe tractare:</strong> ${order.towingRequirements}</li>
         </ul>
       `;
       break;
@@ -61,8 +60,8 @@ const sendAdminOrderNotification = async (adminEmail, customerName, order) => {
     case "vehicle_trailer":
       details += `
         <ul>
-          <li><strong>Vehicle Type:</strong> ${order.vehicleType}</li>
-          <li><strong>Trailer Requirements:</strong> ${order.trailerRequirements}</li>
+          <li><strong>Tip vehicul:</strong> ${order.vehicleType}</li>
+          <li><strong>Cerințe remorcă:</strong> ${order.trailerRequirements}</li>
         </ul>
       `;
       break;
@@ -70,9 +69,9 @@ const sendAdminOrderNotification = async (adminEmail, customerName, order) => {
     case "furniture":
       details += `
         <ul>
-          <li><strong>Furniture Items:</strong> ${order.furnitureItemCount}</li>
-          <li><strong>Dimensions:</strong> ${order.furnitureDimensions}</li>
-          <li><strong>Fragile:</strong> ${order.fragileItems ? "Yes" : "No"}</li>
+          <li><strong>Număr obiecte mobilier:</strong> ${order.furnitureItemCount}</li>
+          <li><strong>Dimensiuni:</strong> ${order.furnitureDimensions}</li>
+          <li><strong>Fragil:</strong> ${order.fragileItems ? "Da" : "Nu"}</li>
         </ul>
       `;
       break;
@@ -80,32 +79,32 @@ const sendAdminOrderNotification = async (adminEmail, customerName, order) => {
     case "animal":
       details += `
         <ul>
-          <li><strong>Animal Count:</strong> ${order.animalCount}</li>
-          <li><strong>Animal Type:</strong> ${order.animalType}</li>
-          <li><strong>Special Needs:</strong> ${order.specialNeeds || "None"}</li>
-          <li><strong>Cage Required:</strong> ${order.cageRequired ? "Yes" : "No"}</li>
+          <li><strong>Număr animale:</strong> ${order.animalCount}</li>
+          <li><strong>Tip animal:</strong> ${order.animalType}</li>
+          <li><strong>Nevoi speciale:</strong> ${order.specialNeeds || "Niciuna"}</li>
+          <li><strong>Cușcă necesară:</strong> ${order.cageRequired ? "Da" : "Nu"}</li>
         </ul>
       `;
       break;
   }
 
   if (order.notes) {
-    details += `<p><strong>Notes:</strong> ${order.notes}</p>`;
+    details += `<p><strong>Note:</strong> ${order.notes}</p>`;
   }
 
   const message = `
-    <p>Hello Admin,</p>
-    <p>A new order has been placed by <strong>${customerName}</strong>.</p>
+    <p>Bună Admin,</p>
+    <p>A fost plasată o comandă nouă de către <strong>${customerName}</strong>.</p>
     ${details}
-    <p>Please review this booking in your admin panel.</p>
-    <p>— Bursa Trans Romania Italy</p>
+    <p>Vă rugăm să verificați această rezervare în panoul de administrare.</p>
+    <p>— Bursa Trans România Italia</p>
   `;
 
   try {
     await SendMail(adminEmail, subject, message);
   } catch (err) {
-    console.error("Email send error:", err);
-    throw new Error(`Email sending failed: ${err.message}`);
+    console.error("Eroare trimitere email:", err);
+    throw new Error(`Trimiterea emailului a eșuat: ${err.message}`);
   }
 };
 
